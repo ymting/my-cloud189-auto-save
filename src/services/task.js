@@ -13,6 +13,7 @@ const { StrmService } = require('./strm');
 const { EventService } = require('./eventService');
 const { TaskEventHandler } = require('./taskEventHandler');
 const AIService = require('./ai');
+const { TMDBService } = require('./tmdb');
 const harmonizedFilter = require('../utils/BloomFilter');
 const cloud189Utils = require('../utils/Cloud189Utils');
 const alistService = require('./alistService');
@@ -189,13 +190,130 @@ class TaskService {
                 }
                 return result.data;
             }
+
+            // ====== 针对文件类型优化的重命名 (TMDB 优先 + 本地正则全量匹配) ======
+            let baseName = resourcePath;
+            let year = 0;
+            // 提取基础名称和年份 (例如 "繁花 (2023)")
+            const yearMatch = resourcePath.match(/(.+?)\s*\(?(\d{4})\)?\s*$/);
+            if (yearMatch) {
+                baseName = yearMatch[1].trim();
+                year = parseInt(yearMatch[2]);
+            } else {
+                baseName = resourcePath.trim();
+            }
+
+            let tmdbName = null;
+            let tmdbParsed = false;
+            try {
+                // 检查是否配置了 TMDB API Key
+                const tmdbApiKey = ConfigService.getConfigValue('tmdb.tmdbApiKey');
+                if (tmdbApiKey) {
+                    // 查询 TMDB (优先返回中文名称)
+                    const tmdbService = new TMDBService();
+                    const tvResult = await tmdbService.searchTV(baseName, year ? year.toString() : '');
+                    if (tvResult && tvResult.title) {
+                        tmdbName = tvResult.title;
+                        if (tvResult.releaseDate) year = parseInt(tvResult.releaseDate.substring(0, 4)) || year;
+                        tmdbParsed = true;
+                    } else {
+                        // 如果查不到剧集，则查电影
+                        const movieResult = await tmdbService.searchMovie(baseName, year ? year.toString() : '');
+                        if (movieResult && movieResult.title) {
+                            tmdbName = movieResult.title;
+                            if (movieResult.releaseDate) year = parseInt(movieResult.releaseDate.substring(0, 4)) || year;
+                            tmdbParsed = true;
+                        }
+                    }
+                }
+            } catch (err) {
+                logTaskEvent("TMDB 查询中文名失败: " + err.message);
+            }
+
+            // 确定最终用于重命名的标准名称 (优先 TMDB 官方中文)
+            const finalName = tmdbName || baseName;
+
+            // ===== 快速通道：尝试本地正则全量匹配剧集 =====
+            let allMatched = true;
+            let localParsedEpisodes = [];
+
+            if (files && files.length > 0) {
+                for (const f of files) {
+                    const nameToMatch = f.name;
+                    let epNum = 0;
+                    let sNum = 1;
+                    let matched = false;
+
+                    // 匹配季数 (e.g. S02, Season 3, 第2季)
+                    const seasonMatch = nameToMatch.match(/(?:S|Season)\s*(\d+)|第\s*(\d+)\s*季/i);
+                    if (seasonMatch) sNum = parseInt(seasonMatch[1] || seasonMatch[2] || 1);
+
+                    // 匹配集数 (e.g. S01E03, EP12, 第5集, 第6话)
+                    const epMatch = nameToMatch.match(/(?:S\d+[-_ ]*E(\d+))|(?:(?:E[P]?|Episode)[-_ ]*(\d+))|(?:第\s*(\d+)\s*[集话])/i);
+                    if (epMatch) {
+                        epNum = parseInt(epMatch[1] || epMatch[2] || epMatch[3]);
+                        matched = true;
+                    } else {
+                        // 回退匹配孤立的集数数字（注意避开年份和常见分辨率）
+                        const numMatch = nameToMatch.match(/(^|[^\d])(?!1080|720|2160|4K|264|265|20\d\d|19\d\d)(\d{1,4})([^\d]|$)/i);
+                        if (numMatch) {
+                            epNum = parseInt(numMatch[3]);
+                            matched = true;
+                        }
+                    }
+
+                    if (!matched) {
+                        allMatched = false;
+                        break;  // 一旦有无法解析的文件，立刻终止本地解析并回退给AI
+                    }
+
+                    const ext = path.extname(f.name);
+                    localParsedEpisodes.push({
+                        id: f.id,
+                        name: finalName,
+                        season: sNum.toString().padStart(2, '0'),
+                        episode: epNum.toString().padStart(2, '0'),
+                        extension: ext
+                    });
+                }
+            } else {
+                allMatched = false;
+            }
+
+            // 如果全部文件都能被正则快速解析，直接返回构造好的结果！
+            if (allMatched && files.length > 0) {
+                logTaskEvent(`极速版重命名生效: 已全量使用本地正则匹配成功，跳过耗时的AI请求 (${finalName})`);
+                return {
+                    name: finalName,
+                    year: year || 0,
+                    type: localParsedEpisodes.length > 1 ? "tv" : "movie",
+                    season: localParsedEpisodes.length > 0 ? localParsedEpisodes[0].season : "01",
+                    episode: localParsedEpisodes
+                };
+            }
+
+            // ======= AI 回退方案 =======
+            // 如果存在无法匹配的文件，使用原本的分块请求给大模型解析（比较耗时）
+            logTaskEvent('本地正则无法完全匹配，回退极速版重命名，尝试使用 AI 对源文件进行大模型解析...');
             const result = await AIService.simpleChatCompletion(resourcePath, files);
             if (!result.success) {
                 throw new Error('AI 分析失败: ' + result.error);
             }
+
+            // 强制将 AI 给出的最终结果中的名字覆写为更准确的 TMDB 官方中文名
+            if (tmdbParsed && result.data) {
+                result.data.name = finalName;
+                if (year) result.data.year = year;
+                if (result.data.episode) {
+                    result.data.episode.forEach(ep => {
+                        ep.name = finalName;
+                    });
+                }
+            }
+
             return result.data;
         } catch (error) {
-            throw new Error('AI 分析失败: ' + error.message);
+            throw new Error('分析失败: ' + error.message);
         }
     }
 
