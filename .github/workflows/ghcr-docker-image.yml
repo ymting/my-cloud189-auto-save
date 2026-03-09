@@ -9,8 +9,8 @@ on:
         required: true
         default: 'latest'
   # 取消下方注释可以实现在 push 代码到 main 分支时自动构建并推送镜像
-  # push:
-  #   branches: [ "main", "master" ]
+  push:
+    branches: [ "main", "master" ]
 
 env:
   REGISTRY: ghcr.io
