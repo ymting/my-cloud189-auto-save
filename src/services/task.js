@@ -17,6 +17,8 @@ const { TMDBService } = require('./tmdb');
 const harmonizedFilter = require('../utils/BloomFilter');
 const cloud189Utils = require('../utils/Cloud189Utils');
 const alistService = require('./alistService');
+const TelegramBotManager = require('../utils/TelegramBotManager');
+const WeChatWorkManager = require('./WeChatWorkService');
 
 class TaskService {
     constructor(taskRepo, accountRepo) {
@@ -257,14 +259,26 @@ class TaskService {
             const tmdbApiKey = ConfigService.getConfigValue('tmdb.tmdbApiKey');
             if (tmdbApiKey && !tmdbParsed && taskDto && !taskDto.manualTmdbBound) {
                 try {
+                    // 发送互动式机器人通知 (Telegram)
+                    const tgBot = TelegramBotManager.getInstance().getBot();
+                    if (tgBot) {
+                        tgBot.sendTmdbFailAlert(taskDto).catch(e => console.error("TG TMDB失败通知失败:", e));
+                    }
+                    
+                    // 发送互动式机器人通知 (企业微信)
+                    if (WeChatWorkManager.isEnabled()) {
+                        WeChatWorkManager.sendTmdbFailAlert(taskDto).catch(e => console.error("企微 TMDB失败通知失败:", e));
+                    }
+
+                    // 保留原有通用通知作为保底
                     const MessageUtilModule = require('./message');
                     const messageUtil = new MessageUtilModule.MessageUtil();
                     await messageUtil.sendMessage({
-                        title: '⚠️需手动指定TMDB',
-                        content: `任务 "${taskDto.resourceName}" (${baseName}) 匹配 TMDB 失败。\n请前往后台管理系统的任务列表进行 [手动指定]`
+                        title: '⚠️匹配TMDB失败',
+                        content: `任务 "${taskDto.resourceName}" (${baseName}) 匹配 TMDB 失败，已触发机器人互动通知，也可前往后台手动指定。`
                     });
                 } catch (e) {
-                    console.error("发送 TMDB 手动匹配通知失败:", e);
+                    console.error("发送 TMDB 匹配失败通知失败:", e);
                 }
             }
 
@@ -875,7 +889,8 @@ class TaskService {
                 const resourceInfo = await this._analyzeResourceInfo(
                     task.resourceName,
                     files.map(f => ({ id: f.id, name: f.name })),
-                    'file'
+                    'file',
+                    task
                 );
                 await this._processRename(cloud189, task, files, resourceInfo, message, newFiles);
             } catch (error) {

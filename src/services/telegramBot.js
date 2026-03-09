@@ -41,6 +41,12 @@ class TelegramBotService {
         this.cloudSaverSearchMap = new Map();
 
         this.tmdbService = new TMDBService();
+
+        // TMDB 绑定会话状态
+        this.tmdbBindMode = false;   // 是否处于 TMDB 搜索等待模式
+        this.tmdbBindTaskId = null;  // 待绑定的任务ID
+        this.tmdbBindType = 'tv';    // 搜索类型 tv/movie
+        this.tmdbSearchResultsCache = []; // 搜索结果缓存
     }
 
     async start() {
@@ -80,6 +86,7 @@ class TelegramBotService {
             { command: 'accounts', description: '账号列表' },
             { command: 'tasks', description: '任务列表' },
             { command: 'execute_all', description: '执行所有任务' },
+            { command: 'rename_tasks', description: '查看未匹配TMDB的任务' },
             { command: 'fl', description: '常用目录列表' },
             { command: 'fs', description: '添加常用目录' },
             { command: 'cancel', description: '取消当前操作' }
@@ -150,6 +157,13 @@ class TelegramBotService {
                 '4. 输入 /cancel 退出搜索模式';
 
             await this.bot.sendMessage(msg.chat.id, helpText);
+
+            const helpText2 = 
+                '---\n\n' +
+                '🎬 AI重命名 & TMDB绑定：\n' +
+                '/rename_tasks - 查看未匹配TMDB的任务列表\n' +
+                '/bind_[ID] - 直接为指定任务绑定TMDB';
+            await this.bot.sendMessage(msg.chat.id, helpText2);
         });
 
 
@@ -160,6 +174,11 @@ class TelegramBotService {
             }
             // 忽略命令消息
             if (msg.text?.startsWith('/')) return;
+            // TMDB绑定模式下处理搜索
+            if (this.tmdbBindMode) {
+                await this._handleTmdbSearchInput(chatId, msg.text?.trim());
+                return;
+            }
             // 搜索模式下处理消息
             if (this.isSearchMode) {
                 const input = msg.text?.trim();
@@ -378,6 +397,11 @@ class TelegramBotService {
             this.currentShareLink = null;
             this.currentAccessCode = null;
             this.isSearchMode = false;  // 退出搜索模式
+            // 重置 TMDB 绑定状态
+            this.tmdbBindMode = false;
+            this.tmdbBindTaskId = null;
+            this.tmdbBindType = 'tv';
+            this.tmdbSearchResultsCache = [];
             try {
                 if (this.lastButtonMessageId) {
                     await this.bot.deleteMessage(chatId, this.lastButtonMessageId);
@@ -435,6 +459,18 @@ class TelegramBotService {
                         break;
                     case 'fs': // 保存当前目录
                         await this.saveFolderAsFavorite(chatId, data, messageId);
+                        break;
+                    case 'tr': // 进入TMDB搜索模式
+                        await this._startTmdbBind(chatId, data, messageId);
+                        break;
+                    case 'ts': // 设置搜索类型并提示输入
+                        await this._setTmdbSearchType(chatId, data, messageId);
+                        break;
+                    case 'tb': // 绑定所选TMDB结果
+                        await this._confirmTmdbBind(chatId, data, messageId);
+                        break;
+                    case 'tse': // 选择季数
+                        await this._selectTmdbSeason(chatId, data, messageId);
                         break;
                 }
             } catch (error) {
@@ -511,6 +547,34 @@ class TelegramBotService {
                     message_id: message.message_id
                 });
             }
+        });
+
+        // 查看未匹配TMDB的任务
+        this.bot.onText(/\/rename_tasks/, async (msg) => {
+            const chatId = msg.chat.id;
+            if (!this._checkChatId(chatId)) return;
+            await this.showRenameTasksList(chatId);
+        });
+
+        // 直接为指定任务绑定TMDB
+        this.bot.onText(/^\/bind_(\d+)$/, async (msg, match) => {
+            const chatId = msg.chat.id;
+            if (!this._checkChatId(chatId)) return;
+            const taskId = parseInt(match[1]);
+            const task = await this.taskRepo.findOneBy({ id: taskId });
+            if (!task) {
+                await this.bot.sendMessage(chatId, `未找到ID为 ${taskId} 的任务`);
+                return;
+            }
+            this.tmdbBindTaskId = taskId;
+            const keyboard = [
+                [{ text: '📺 剧集/动漫/纪录片', callback_data: JSON.stringify({ t: 'ts', tp: 'tv', ti: taskId }) }],
+                [{ text: '🎦 电影', callback_data: JSON.stringify({ t: 'ts', tp: 'movie', ti: taskId }) }]
+            ];
+            await this.bot.sendMessage(chatId,
+                `任务：《${task.resourceName}》\n\n请选择媒体类型：`,
+                { reply_markup: { inline_keyboard: keyboard } }
+            );
         });
     }
 
@@ -1000,6 +1064,162 @@ class TelegramBotService {
             
         } catch (error) {
             throw new Error(`保存常用目录失败: ${error.message}`);
+        }
+    }
+
+    // 显示未匹配TMDB的任务列表
+    async showRenameTasksList(chatId) {
+        const tasks = await this.taskRepo.find({
+            order: { updatedAt: 'DESC' },
+            take: 20
+        });
+        if (tasks.length === 0) {
+            await this.bot.sendMessage(chatId, '📢 暂无任务');
+            return;
+        }
+        const taskText = tasks.map((t, i) =>
+            `${i + 1}. 📺 ${t.resourceName}\n` +
+            `   ${t.manualTmdbBound ? `✅ 已绑定: ${t.tmdbTitle || t.tmdbId}${t.manualSeason != null ? ' 第' + t.manualSeason + '季' : ''}` : '❌ 未绑定TMDB'}\n` +
+            `   /bind_${t.id}`
+        ).join('\n\n');
+        await this.bot.sendMessage(chatId, `🎥 任务列表 (TMDB绑定状态)\n\n${taskText}\n\n输入 /bind_[ID] 为对应任务绑定TMDB`, { parse_mode: 'HTML' });
+    }
+
+    // 开始 TMDB 绑定流程（回调按键 tr）
+    async _startTmdbBind(chatId, data, messageId) {
+        const taskId = data.ti;
+        const task = await this.taskRepo.findOneBy({ id: taskId });
+        if (!task) {
+            await this.bot.editMessageText(`未找到任务`, { chat_id: chatId, message_id: messageId });
+            return;
+        }
+        this.tmdbBindTaskId = taskId;
+        const keyboard = [
+            [{ text: '📺 剧集/动漫/纪录片', callback_data: JSON.stringify({ t: 'ts', tp: 'tv', ti: taskId }) }],
+            [{ text: '🎦 电影', callback_data: JSON.stringify({ t: 'ts', tp: 'movie', ti: taskId }) }]
+        ];
+        await this.bot.editMessageText(
+            `任务：《${task.resourceName}》\n\n请选择媒体类型：`,
+            { chat_id: chatId, message_id: messageId, reply_markup: { inline_keyboard: keyboard } }
+        );
+    }
+
+    // 设置搜索类型，进入等待文字输入模式
+    async _setTmdbSearchType(chatId, data, messageId) {
+        this.tmdbBindType = data.tp;
+        this.tmdbBindTaskId = data.ti;
+        this.tmdbBindMode = true;
+        const typeLabel = data.tp === 'tv' ? '剧集/动漫' : '电影';
+        await this.bot.editMessageText(
+            `已选择类型：${typeLabel}\n\n🔍 请发送影视名称开始搜索\n\n输入 /cancel 可取消`,
+            { chat_id: chatId, message_id: messageId }
+        );
+    }
+
+    // 处理用户输入的 TMDB 搜索关键词
+    async _handleTmdbSearchInput(chatId, input) {
+        if (!input) return;
+        const loadMsg = await this.bot.sendMessage(chatId, `🔍 正在搜索 "${input}"...`);
+        try {
+            const response = await fetch(`http://localhost:${process.env.PORT || 3000}/api/tmdb/search?query=${encodeURIComponent(input)}&type=${this.tmdbBindType}`, {
+                headers: { 'x-api-key': require('./ConfigService').getConfigValue('system.apiKey', '') }
+            });
+            const result = await response.json();
+            if (!result.success || !result.data?.length) {
+                await this.bot.editMessageText(`未找到相关结果，请尝试其他关键词`, { chat_id: chatId, message_id: loadMsg.message_id });
+                return;
+            }
+            this.tmdbSearchResultsCache = result.data;
+            const keyboard = result.data.slice(0, 8).map((item, idx) => [{
+                text: `${idx + 1}. ${item.title || item.name} (${(item.release_date || item.first_air_date || '').substring(0, 4)}) [${item.id}]`,
+                callback_data: JSON.stringify({ t: 'tb', idx, ti: this.tmdbBindTaskId, tp: this.tmdbBindType })
+            }]);
+            keyboard.push([{ text: '❌ 取消', callback_data: JSON.stringify({ t: 'fc' }) }]);
+            await this.bot.editMessageText(
+                `📊 搜到 ${result.data.length} 条结果，请选择：\n\n(如果列表没有想要的，可输入 /cancel 后重新搜索)`,
+                { chat_id: chatId, message_id: loadMsg.message_id, reply_markup: { inline_keyboard: keyboard } }
+            );
+            this.tmdbBindMode = false; // 退出输入模式，等待回调选择
+        } catch (e) {
+            await this.bot.editMessageText(`搜索失败: ${e.message}`, { chat_id: chatId, message_id: loadMsg.message_id });
+        }
+    }
+
+    // 用户选了某个TMDB结果，进入选季数步骤
+    async _confirmTmdbBind(chatId, data, messageId) {
+        const item = this.tmdbSearchResultsCache[data.idx];
+        if (!item) {
+            await this.bot.editMessageText('结果已过期，请重新搜索', { chat_id: chatId, message_id: messageId });
+            return;
+        }
+        const title = item.title || item.name;
+        const tmdbId = item.id;
+        const tp = data.tp;
+        if (tp === 'tv') {
+            // 剧集类：进入选季数步骤
+            const seasonBtns = [1, 2, 3, 4, 5, 6].map(s => ({
+                text: `第${s}季`,
+                callback_data: JSON.stringify({ t: 'tse', s, id: tmdbId, tp, ti: data.ti, title })
+            }));
+            const rows = [];
+            for (let i = 0; i < seasonBtns.length; i += 3) rows.push(seasonBtns.slice(i, i + 3));
+            rows.push([{ text: '🤖 自动识别季数', callback_data: JSON.stringify({ t: 'tse', s: null, id: tmdbId, tp, ti: data.ti, title }) }]);
+            rows.push([{ text: '❌ 取消', callback_data: JSON.stringify({ t: 'fc' }) }]);
+            await this.bot.editMessageText(
+                `✅ 已选择：《${title}》 (TMDB: ${tmdbId})\n\n📅 请选择季数（不确定可选“自动识别”）：`,
+                { chat_id: chatId, message_id: messageId, reply_markup: { inline_keyboard: rows } }
+            );
+        } else {
+            // 电影类：直接绑定
+            await this._doBindTmdb(chatId, messageId, data.ti, tmdbId, tp, title, null);
+        }
+    }
+
+    // 用户选了季数，执行最终绑定
+    async _selectTmdbSeason(chatId, data, messageId) {
+        await this._doBindTmdb(chatId, messageId, data.ti, data.id, data.tp, data.title, data.s);
+    }
+
+    // 实际调用API绑定TMDB并触发重命名
+    async _doBindTmdb(chatId, messageId, taskId, tmdbId, videoType, title, manualSeason) {
+        await this.bot.editMessageText('⏳ 正在绑定并触发重命名...', { chat_id: chatId, message_id: messageId });
+        try {
+            const apiKey = require('./ConfigService').getConfigValue('system.apiKey', '');
+            const port = process.env.PORT || 3000;
+            const resp = await fetch(`http://localhost:${port}/api/tasks/${taskId}/manual-tmdb`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
+                body: JSON.stringify({ tmdbId: String(tmdbId), videoType, title, manualSeason })
+            });
+            const result = await resp.json();
+            if (result.success) {
+                // 触发执行
+                fetch(`http://localhost:${port}/api/tasks/${taskId}/execute`, {
+                    method: 'POST',
+                    headers: { 'x-api-key': apiKey }
+                });
+                const seasonTxt = manualSeason != null ? ` 第${manualSeason}季` : ' (自动识别季)';
+                const successTxt = `✅ 绑定成功！\n🎥 媒体：${title}${videoType === 'tv' ? seasonTxt : ''}\n🎯 TMDB ID: ${tmdbId}\n\n🔄 已在后台触发重命名，稍后会发送结果通知`;
+                await this.bot.editMessageText(successTxt, { chat_id: chatId, message_id: messageId });
+            } else {
+                await this.bot.editMessageText(`❌ 绑定失败: ${result.error}`, { chat_id: chatId, message_id: messageId });
+            }
+        } catch (e) {
+            await this.bot.editMessageText(`❌ 绑定失败: ${e.message}`, { chat_id: chatId, message_id: messageId });
+        }
+    }
+
+    // 发送TMDB匹配失败告警（在task.js中调用）
+    async sendTmdbFailAlert(task) {
+        if (!this.bot || !this.chatId) return;
+        const keyboard = [[
+            { text: '🔍 搜索并绑定TMDB', callback_data: JSON.stringify({ t: 'tr', ti: task.id }) }
+        ]];
+        const text = `⚠️ TMDB 自动匹配失败\n\n📺 任务：${task.resourceName}\n💡 需要手动指定TMDB信息才能正确重命名`;
+        try {
+            await this.bot.sendMessage(this.chatId, text, { reply_markup: { inline_keyboard: keyboard } });
+        } catch (e) {
+            console.error('发送TMDB失败告警失败:', e.message);
         }
     }
 

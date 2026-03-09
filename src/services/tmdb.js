@@ -93,6 +93,24 @@ class TMDBService {
         }
     }
 
+    // 按类型搜索，返回标准化平铺列表（供企微/TG bot选择用）
+    async searchByType(query, type = 'tv') {
+        try {
+            const endpoint = type === 'movie' ? '/search/movie' : '/search/tv';
+            const response = await this._request(endpoint, { query });
+            return (response.results || []).map(item => ({
+                id: item.id,
+                title: item.title || item.name,
+                name: item.name || item.title,
+                release_date: item.release_date || item.first_air_date,
+                first_air_date: item.first_air_date || item.release_date,
+                poster_path: item.poster_path
+            }));
+        } catch (e) {
+            throw new Error(`TMDB搜索失败: ${e.message}`);
+        }
+    }
+
     async _searchMedia(type, title, year, currentEpisodes = 0) {
         console.log(`TMDB搜索${type}：${title}，年份：${year}，已有集数：${currentEpisodes}`);
         // 发起搜索请求

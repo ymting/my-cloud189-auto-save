@@ -21,7 +21,14 @@ class ConfigService {
       },
       wecom: {
         enable: false,
-        webhook: ''
+        webhook: '',
+        // 以下为企业微信自建应用配置（用于双向交互）
+        corpId: '',
+        appId: '',           // 自建应用 AgentId
+        appSecret: '',
+        callbackToken: '',         // 接收消息 Token
+        callbackEncodingAESKey: '', // 接收消息 AES Key
+        callbackEnabled: false,    // 是否启用接收消息
       },
       telegram: {
         enable: false,

@@ -23,6 +23,7 @@ const { StrmService } = require('./services/strm');
 const AIService = require('./services/ai');
 const CustomPushService = require('./services/message/CustomPushService');
 const { TMDBService } = require('./services/tmdb');
+const WeChatWorkManager = require('./services/WeChatWorkService');
 
 const app = express();
 app.use(cors({
@@ -104,6 +105,7 @@ app.use((req, res, next) => {
         || req.path === '/api/auth/login' 
         || req.path === '/api/auth/login' 
         || req.path === '/emby/notify'
+        || req.path.startsWith('/wecom/')
         || req.path.match(/\.(css|js|png|jpg|jpeg|gif|ico)$/)) {
         return next();
     }
@@ -143,6 +145,17 @@ AppDataSource.initialize().then(async () => {
         ConfigService.getConfigValue('telegram.bot.chatId'),
         ConfigService.getConfigValue('telegram.bot.enable')
     );
+    // 初始化企业微信应用
+    const wecomCfg = ConfigService.getConfigValue('wecom') || {};
+    if (wecomCfg.callbackEnabled && wecomCfg.corpId && wecomCfg.appId) {
+        WeChatWorkManager.initialize({
+            corpId: wecomCfg.corpId,
+            appId: wecomCfg.appId,
+            appSecret: wecomCfg.appSecret,
+            token: wecomCfg.callbackToken,
+            encodingAESKey: wecomCfg.callbackEncodingAESKey
+        });
+    }
     // 初始化缓存管理器
     const folderCache = new CacheManager(parseInt(600));
     // 初始化任务定时器
@@ -416,6 +429,145 @@ AppDataSource.initialize().then(async () => {
             res.json({ success: true, data: task });
         } catch (error) {
             res.json({ success: false, error: error.message });
+        }
+    });
+
+    // 企业微信回调地址验证 (GET)
+    app.get('/wecom/callback', (req, res) => {
+        const { msg_signature, timestamp, nonce, echostr } = req.query;
+        const service = WeChatWorkManager.getService();
+        if (!service) return res.status(400).send('WeChat service not configured');
+        try {
+            const plain = service.verifyCallback(msg_signature, timestamp, nonce, echostr);
+            res.send(plain);
+        } catch (e) {
+            res.status(403).send('Verification failed');
+        }
+    });
+
+    // 企业微信接收消息 (POST) - 数字选择式交互状态机
+    app.post('/wecom/callback', express.text({ type: 'application/xml' }), async (req, res) => {
+        res.send('success'); // 先立即回包，避免超时重试
+        const { msg_signature, timestamp, nonce } = req.query;
+        const service = WeChatWorkManager.getService();
+        if (!service) return;
+        try {
+            const encryptMatch = (req.body || '').match(/<Encrypt><!\[CDATA\[(.*?)\]\]><\/Encrypt>/);
+            if (!encryptMatch) return;
+            const encrypted = encryptMatch[1];
+            if (!service.verifySignature(msg_signature, timestamp, nonce, encrypted)) return;
+            const plain = service.decryptMessage(encrypted);
+
+            const fromUser = plain.match(/<FromUserName><!\[CDATA\[(.*?)\]\]><\/FromUserName>/)?.[1];
+            const msgType = plain.match(/<MsgType><!\[CDATA\[(.*?)\]\]><\/MsgType>/)?.[1];
+            const content = plain.match(/<Content><!\[CDATA\[(.*?)\]\]><\/Content>/)?.[1]?.trim();
+            const event = plain.match(/<Event><!\[CDATA\[(.*?)\]\]><\/Event>/)?.[1];
+            const eventKey = plain.match(/<EventKey><!\[CDATA\[(.*?)\]\]><\/EventKey>/)?.[1];
+
+            const send = (txt) => service.sendTextMessage(fromUser, txt);
+            const ses = WeChatWorkManager.getSession(fromUser);
+
+            // 菜单点击事件
+            if (msgType === 'event' && event === 'CLICK') {
+                if (eventKey === 'RENAME_TASKS') {
+                    const tasks = await taskRepo.find({ order: { updatedAt: 'DESC' }, take: 10 });
+                    const txt = tasks.map((t, i) => `${i+1}. ${t.resourceName} ${t.manualTmdbBound ? '✅已绑定' : '❌未绑定'}`).join('\n');
+                    WeChatWorkManager.setSession(fromUser, { state: 'select_task', tasks });
+                    await send(`📺 任务列表：\n\n${txt}\n\n回复数字选择任务绑定TMDB，回复"取消"退出`);
+                } else if (eventKey === 'EXECUTE_ALL') {
+                    taskService.processAllTasks(true).catch(() => {});
+                    await send('✅ 已开始执行所有任务...');
+                } else if (eventKey === 'TASK_LIST') {
+                    const tasks = await taskRepo.find({ order: { updatedAt: 'DESC' }, take: 10 });
+                    const txt = tasks.map((t, i) => `${i+1}. ${t.resourceName} - ${t.status}`).join('\n');
+                    await send(`📊 任务列表\n\n${txt}`);
+                } else if (eventKey === 'CANCEL') {
+                    WeChatWorkManager.clearSession(fromUser);
+                    await send('✅ 已取消当前操作');
+                }
+                return;
+            }
+
+            // 文字消息
+            if (msgType === 'text' && content) {
+                if (content === '取消' || content.toLowerCase() === 'cancel') {
+                    WeChatWorkManager.clearSession(fromUser);
+                    await send('已取消');
+                    return;
+                }
+
+                if (ses.state === 'select_task') {
+                    const idx = parseInt(content) - 1;
+                    const task = ses.tasks?.[idx];
+                    if (!task) { await send('请输入有效数字，或回复"取消"'); return; }
+                    WeChatWorkManager.setSession(fromUser, { state: 'select_type', taskId: task.id, taskName: task.resourceName });
+                    await send(`选择任务：《${task.resourceName}》\n\n请选择媒体类型：\n1. 剧集/动漫/纪录片\n2. 电影\n\n回复 1 或 2`);
+                    return;
+                }
+
+                if (ses.state === 'select_type') {
+                    const tp = content === '2' ? 'movie' : 'tv';
+                    WeChatWorkManager.setSession(fromUser, { state: 'input_keyword', searchType: tp });
+                    await send(`已选择：${tp === 'tv' ? '剧集' : '电影'}\n\n🔍 请发送影视名称开始搜索`);
+                    return;
+                }
+
+                if (ses.state === 'input_keyword') {
+                    const tmdbSvc = new TMDBService();
+                    const apiResults = await tmdbSvc.searchByType(content, ses.searchType);
+                    if (!apiResults?.length) { await send(`未找到"${content}"，请重新输入`); return; }
+                    const list = apiResults.slice(0, 6);
+                    const txt = list.map((it, i) => `${i+1}. ${it.title||it.name} (${(it.release_date||it.first_air_date||'').substring(0,4)}) ID:${it.id}`).join('\n');
+                    WeChatWorkManager.setSession(fromUser, { state: 'select_result', searchResults: list });
+                    await send(`📊 搜索结果：\n\n${txt}\n\n回复数字选择，或回复"取消"`);
+                    return;
+                }
+
+                if (ses.state === 'select_result') {
+                    const idx = parseInt(content) - 1;
+                    const item = ses.searchResults?.[idx];
+                    if (!item) { await send('请输入有效数字，或回复"取消"'); return; }
+                    const title = item.title || item.name;
+                    const tmdbId = String(item.id);
+                    if (ses.searchType === 'tv') {
+                        WeChatWorkManager.setSession(fromUser, { state: 'select_season', pendingTmdbId: tmdbId, pendingTitle: title });
+                        await send(`已选择：《${title}》\n\n📅 请指定季数：\n回复数字(如 2)或回复"自动"自动识别`);
+                    } else {
+                        // 电影直接绑定
+                        const task = await taskRepo.findOneBy({ id: ses.taskId });
+                        if (task) {
+                            task.tmdbId = tmdbId; task.videoType = 'movie'; task.tmdbTitle = title;
+                            task.manualTmdbBound = true; task.manualSeason = null;
+                            await taskRepo.save(task);
+                            taskService.processAllTasks(true, [ses.taskId]).catch(() => {});
+                            await send(`✅ 绑定成功！\n🎥 电影：${title}\n🔄 已触发重命名`);
+                        }
+                        WeChatWorkManager.clearSession(fromUser);
+                    }
+                    return;
+                }
+
+                if (ses.state === 'select_season') {
+                    const manualSeason = content === '自动' ? null : parseInt(content);
+                    if (content !== '自动' && isNaN(manualSeason)) { await send('请输入数字或"自动"'); return; }
+                    const task = await taskRepo.findOneBy({ id: ses.taskId });
+                    if (task) {
+                        task.tmdbId = ses.pendingTmdbId; task.videoType = 'tv';
+                        task.tmdbTitle = ses.pendingTitle; task.manualSeason = manualSeason;
+                        task.manualTmdbBound = true;
+                        await taskRepo.save(task);
+                        taskService.processAllTasks(true, [ses.taskId]).catch(() => {});
+                        await send(`✅ 绑定成功！\n🎥 ${ses.pendingTitle}${manualSeason != null ? ' 第'+manualSeason+'季' : ' (自动识别季)'}\n🔄 已触发重命名，完成后发送通知`);
+                    }
+                    WeChatWorkManager.clearSession(fromUser);
+                    return;
+                }
+
+                // 默认帮助
+                await send('🤖 天翼云盘助手\n\n请点击下方菜单进行操作：\n🎬 AI重命名 → 未匹配任务列表\n📋 任务管理 → 查看任务列表');
+            }
+        } catch (e) {
+            logTaskEvent(`企微回调处理失败: ${e.message}`);
         }
     });
 

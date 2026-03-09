@@ -22,6 +22,13 @@ async function loadSettings() {
             // 企业微信设置
             document.getElementById('enableWecom').checked = settings.wecom?.enable || false;
             document.getElementById('wecomWebhook').value = settings.wecom?.webhook || '';
+            // 企业微信自建应用设置
+            document.getElementById('wecomCorpId').value = settings.wecom?.corpId || '';
+            document.getElementById('wecomAppId').value = settings.wecom?.appId || '';
+            document.getElementById('wecomAppSecret').value = settings.wecom?.appSecret || '';
+            document.getElementById('wecomCallbackToken').value = settings.wecom?.callbackToken || '';
+            document.getElementById('wecomCallbackAesKey').value = settings.wecom?.callbackEncodingAESKey || '';
+            document.getElementById('wecomCallbackEnabled').checked = settings.wecom?.callbackEnabled || false;
             
             // Telegram 设置
             document.getElementById('enableTelegram').checked = settings.telegram?.enable || false;
@@ -122,7 +129,14 @@ async function saveSettings() {
         },
         wecom: {
             enable: document.getElementById('enableWecom').checked,
-            webhook: document.getElementById('wecomWebhook').value
+            webhook: document.getElementById('wecomWebhook').value,
+            // 自建应用双向交互
+            corpId: document.getElementById('wecomCorpId').value,
+            appId: document.getElementById('wecomAppId').value,
+            appSecret: document.getElementById('wecomAppSecret').value,
+            callbackToken: document.getElementById('wecomCallbackToken').value,
+            callbackEncodingAESKey: document.getElementById('wecomCallbackAesKey').value,
+            callbackEnabled: document.getElementById('wecomCallbackEnabled').checked
         },
         telegram: {
             enable: document.getElementById('enableTelegram').checked,

@@ -435,6 +435,16 @@
                                 企微 推送
                             </label>
                             <input type="text" id="wecomWebhook" placeholder="机器人webhook">
+                            <label style="margin-top: 10px; display: block; font-weight: bold; color: #1890ff;">企业微信自建应用 (双向交互)</label>
+                            <input type="text" id="wecomCorpId" placeholder="企业ID (corpId)">
+                            <input type="text" id="wecomAppId" placeholder="应用AgentId">
+                            <input type="text" id="wecomAppSecret" placeholder="应用Secret">
+                            <input type="text" id="wecomCallbackToken" placeholder="Token">
+                            <input type="text" id="wecomCallbackAesKey" placeholder="EncodingAESKey">
+                            <label>
+                                <input type="checkbox" id="wecomCallbackEnabled">
+                                启用自建应用回调
+                            </label>
                             <label>
                                 <input type="checkbox" id="enableTelegram">
                                 Telegram 推送
