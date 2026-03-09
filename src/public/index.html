@@ -166,6 +166,7 @@
                                     <a onclick="executeAllTask()">执行所有</a>
                                     <a onclick="deleteSelectedTasks()">批量删除</a>
                                     <a onclick="generateStrm()">生成STRM</a>
+                                    <a onclick="openManualTmdbModal()">手动指定TMDB</a>
                                 </div>
                             </div>
                         </div>
@@ -310,7 +311,7 @@
             </div>
 
             <!-- 手动指定 TMDB 模态框 -->
-            <div id="manualTmdbModal" class="modal">
+            <div id="manualTmdbModal" class="modal" style="z-index: 1010;">
                 <div class="modal-content" style="max-width: 600px;">
                     <div class="modal-header">
                         <h3>手动指定 TMDB</h3>
