@@ -1302,15 +1302,27 @@ class TaskService {
         }
     }
     // 校验文件后缀
-    _checkFileSuffix(file,enableOnlySaveMedia, mediaSuffixs) {
+    _checkFileSuffix(file, enableOnlySaveMedia, mediaSuffixs) {
         // 获取文件后缀
         const fileExt = '.' + file.name.split('.').pop().toLowerCase();
-        const isMedia = mediaSuffixs.includes(fileExt)
-        // 如果启用了只保存媒体文件, 则检查文件后缀是否在配置中
-        if (enableOnlySaveMedia && !isMedia) {
-            return false
+        const isMedia = mediaSuffixs.includes(fileExt);
+        
+        // 垃圾文件/非媒体文件黑名单 (即使不开启仅保存媒体文件，也过滤掉这些明显的无关文件)
+        const junkSuffixes = ['.txt', '.html', '.htm', '.png', '.jpg', '.jpeg', '.gif', '.url', '.nfo'];
+        // 字幕文件白名单 (属于有用文件)
+        const subSuffixes = ['.srt', '.ass', '.ssa', '.sub', '.vtt'];
+
+        // 如果是黑名单里的垃圾文件，直接过滤掉
+        if (junkSuffixes.includes(fileExt)) {
+            return false;
         }
-        return true
+
+        // 如果启用了只保存媒体文件, 则检查文件后缀是否在媒体白名单或字幕白名单中
+        if (enableOnlySaveMedia && !isMedia && !subSuffixes.includes(fileExt)) {
+            return false;
+        }
+
+        return true;
     }
     // 根据realRootFolderId获取根目录
     async getRootFolder(task) {
