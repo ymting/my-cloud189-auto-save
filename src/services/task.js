@@ -825,8 +825,34 @@ class TaskService {
             const folderName = task.realFolderName.substring(task.realFolderName.indexOf('/') + 1);
             new StrmService().deleteDir(path.join(task.account.localStrmPrefix, folderName))
         }
+        // 处理分享链接、访问码、分享文件夹的更新
+        if (updates.shareLink || updates.accessCode !== undefined || updates.shareFolderId) {
+            const shareLink = updates.shareLink || task.shareLink;
+            const accessCode = updates.accessCode !== undefined ? updates.accessCode : task.accessCode;
+            
+            let shareCode = shareLink ? shareLink.substring(shareLink.lastIndexOf('/') + 1) : null;
+            if (shareCode) {
+                const cloud189 = Cloud189Service.getInstance(task.account);
+                const shareInfo = await cloud189.getShareInfo(shareCode);
+                if (shareInfo) {
+                    task.shareLink = shareLink;
+                    task.accessCode = accessCode;
+                    task.shareId = shareInfo.shareId;
+                    task.shareMode = shareInfo.shareMode || (accessCode ? 2 : 1);
+                    task.isFolder = shareInfo.isFolder;
+
+                    if (updates.shareFolderId === '-1') {
+                        task.shareFolderId = shareInfo.fileId;
+                        task.shareFolderName = '';
+                    } else if (updates.shareFolderId) {
+                        task.shareFolderId = updates.shareFolderId;
+                    }
+                }
+            }
+        }
+
         // 只允许更新特定字段
-        const allowedFields = ['resourceName', 'realFolderId', 'currentEpisodes', 'totalEpisodes', 'status','realFolderName', 'shareFolderName', 'shareFolderId', 'matchPattern','matchOperator','matchValue','remark', 'enableCron', 'cronExpression', 'enableTaskScraper'];
+        const allowedFields = ['resourceName', 'realFolderId', 'currentEpisodes', 'totalEpisodes', 'status','realFolderName', 'shareFolderName', 'matchPattern','matchOperator','matchValue','remark', 'enableCron', 'cronExpression', 'enableTaskScraper'];
         for (const field of allowedFields) {
             if (updates[field] !== undefined) {
                 task[field] = updates[field];
