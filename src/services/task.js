@@ -883,6 +883,26 @@ class TaskService {
         // 过滤掉文件夹
         files = files.filter(file => !file.isFolder);
 
+        // 初始化去重所需的基础名称映射表
+        const mediaSuffixs = ConfigService.getConfigValue('task.mediaSuffix').split(';').map(suffix => suffix.toLowerCase());
+        const getBaseName = (filename) => {
+            const lastDot = filename.lastIndexOf('.');
+            return lastDot !== -1 ? filename.substring(0, lastDot) : filename;
+        };
+        const isMediaFile = (filename) => {
+            const ext = '.' + filename.split('.').pop().toLowerCase();
+            return mediaSuffixs.includes(ext);
+        };
+        const baseNameMap = new Map();
+        for (const f of files) {
+            if (isMediaFile(f.name)) {
+                baseNameMap.set(f.id, {
+                    baseName: getBaseName(f.name).toLowerCase(),
+                    isMedia: true
+                });
+            }
+        }
+
         // 使用 AI 重命名或正则重命名  如果写了正则, 那么优先使用正则
         if (AIService.isEnabled() && (!task.sourceRegex || !task.targetRegex)) {
             logTaskEvent(` ${task.resourceName} 开始使用 AI 重命名`);
@@ -893,14 +913,14 @@ class TaskService {
                     'file',
                     task
                 );
-                await this._processRename(cloud189, task, files, resourceInfo, message, newFiles);
+                await this._processRename(cloud189, task, files, resourceInfo, message, newFiles, baseNameMap, getBaseName, isMediaFile);
             } catch (error) {
                 logTaskEvent('AI 重命名失败，使用正则表达式重命名: ' + error.message);
-                await this._processRegexRename(cloud189, task, files, message, newFiles);
+                await this._processRegexRename(cloud189, task, files, message, newFiles, baseNameMap, getBaseName, isMediaFile);
             }
         } else {
             logTaskEvent(` ${task.resourceName} 开始使用正则表达式重命名`);
-            await this._processRegexRename(cloud189, task, files, message, newFiles);
+            await this._processRegexRename(cloud189, task, files, message, newFiles, baseNameMap, getBaseName, isMediaFile);
         }
 
         // 处理消息和保存结果
@@ -956,7 +976,7 @@ class TaskService {
         return this._sanitizeFileName(newName);
     }
     // 处理重命名过程
-    async _processRename(cloud189, task, files, resourceInfo, message, newFiles) {
+    async _processRename(cloud189, task, files, resourceInfo, message, newFiles, baseNameMap, getBaseName, isMediaFile) {
         const newNames = resourceInfo.episode;
         // 处理aiFilename, 文件命名通过配置文件的占位符获取
         // 获取用户配置的文件名模板，如果没有配置则使用默认模板
@@ -971,6 +991,30 @@ class TaskService {
                     continue;
                 }
                 const newName = this._generateFileName(file, aiFile, resourceInfo, template, task);
+                
+                // 去重检查
+                let isDuplicate = false;
+                if (isMediaFile && baseNameMap && isMediaFile(newName)) {
+                    const newBaseName = getBaseName(newName).toLowerCase();
+                    for (const [id, info] of baseNameMap.entries()) {
+                        if (id !== file.id && info.baseName === newBaseName) {
+                            isDuplicate = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (isDuplicate) {
+                    await this.deleteCloudFile(cloud189, file, 0);
+                    message.push(`├─ ${file.name} → 删除 (已存在忽略后缀的同名视频文件)`);
+                    if (baseNameMap) baseNameMap.delete(file.id);
+                    continue; // 删除后直接跳过，不再重命名和生成 STRM
+                }
+
+                if (isMediaFile && baseNameMap && isMediaFile(newName)) {
+                    baseNameMap.set(file.id, { baseName: getBaseName(newName).toLowerCase(), isMedia: true });
+                }
+
                 // 判断文件名是否已存在
                 if (file.name === newName) {
                     newFiles.push(file);
@@ -992,11 +1036,35 @@ class TaskService {
             .trim();
     }
     // 处理正则表达式重命名
-    async _processRegexRename(cloud189, task, files, message, newFiles) {
+    async _processRegexRename(cloud189, task, files, message, newFiles, baseNameMap, getBaseName, isMediaFile) {
         if (!task.sourceRegex || !task.targetRegex) return [];
         for (const file of files) {
             try {
                 const destFileName = file.name.replace(new RegExp(task.sourceRegex), task.targetRegex);
+                
+                // 去重检查
+                let isDuplicate = false;
+                if (isMediaFile && baseNameMap && isMediaFile(destFileName)) {
+                    const newBaseName = getBaseName(destFileName).toLowerCase();
+                    for (const [id, info] of baseNameMap.entries()) {
+                        if (id !== file.id && info.baseName === newBaseName) {
+                            isDuplicate = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (isDuplicate) {
+                    await this.deleteCloudFile(cloud189, file, 0);
+                    message.push(`├─ ${file.name} → 删除 (已存在忽略后缀的同名视频文件)`);
+                    if (baseNameMap) baseNameMap.delete(file.id);
+                    continue; // 删除后直接跳过
+                }
+
+                if (isMediaFile && baseNameMap && isMediaFile(destFileName)) {
+                    baseNameMap.set(file.id, { baseName: getBaseName(destFileName).toLowerCase(), isMedia: true });
+                }
+
                 if (destFileName === file.name) {
                     newFiles.push(file);
                     continue;

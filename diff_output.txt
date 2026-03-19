@@ -1,0 +1,225 @@
+diff --git a/src/public/index.html b/src/public/index.html
+index acc1585..ba2daec 100644
+--- a/src/public/index.html
++++ b/src/public/index.html
+@@ -730,6 +730,14 @@
+                         <input type="text" id="editResourceName" required>
+                     </div>
+                 </div>
++                <div class="form-group">
++                    <label for="editShareLink">资源链接</label>
++                    <div class="share-input-group" style="display: flex; gap: 10px;">
++                        <input type="text" id="editShareLink" required style="flex: 2;" data-edit-share-input placeholder="可自动解析带访问码的链接">
++                        <input type="text" id="editAccessCode" placeholder="访问码（可选）" style="flex: 1;" data-edit-share-input>
++                    </div>
++                    <div id="editShareParseError" style="color: #ff4d4f; font-size: 10px; margin-top: 2px; min-height: 12px;"></div>
++                </div>
+                 <div class="form-group">
+                     <label for="shareFolderId">源目录(分享链接中的目录)</label>
+                     <div class="tree-select">
+@@ -1056,4 +1064,4 @@
+             </div>
+         </form>
+     </div>
+-</div>
+\ No newline at end of file
++</div>
+diff --git a/src/public/js/edit-task.js b/src/public/js/edit-task.js
+index 79a6239..13c6317 100644
+--- a/src/public/js/edit-task.js
++++ b/src/public/js/edit-task.js
+@@ -27,7 +27,9 @@ function showEditTaskModal(id) {
+     document.getElementById('editCurrentEpisodes').value = task.currentEpisodes;
+     document.getElementById('editTotalEpisodes').value = task.totalEpisodes;
+     document.getElementById('editStatus').value = task.status;
+-    document.getElementById('shareLink').value = task.shareLink;
++    document.getElementById('editShareLink').value = task.shareLink;
++    document.getElementById('editAccessCode').value = task.accessCode || '';
++    document.getElementById('editShareParseError').textContent = '';
+     document.getElementById('shareFolder').value = task.shareFolderName;
+     document.getElementById('shareFolderId').value = task.shareFolderId;
+     document.getElementById('editMatchPattern').value = task.matchPattern;
+@@ -48,11 +50,56 @@ function showEditTaskModal(id) {
+     document.getElementById('editEnableTaskScraper').checked = task?.enableTaskScraper;
+ }
+ 
++async function parseEditShareLink() {
++    const shareParseError = document.getElementById('editShareParseError');
++    shareParseError.textContent = '';
++    let shareLink = document.getElementById('editShareLink')?.value?.trim();
++    let accessCode = document.getElementById('editAccessCode')?.value?.trim();
++    const accountId = document.getElementById('editAccountId')?.value;
++    if (!shareLink || !accountId) {
++        return;
++    }
++    shareLink = decodeURIComponent(shareLink);
++    const { url: parsedShareLink, accessCode: parsedAccessCode } = parseCloudShare(shareLink);
++    if (parsedAccessCode) {
++        accessCode = parsedAccessCode;
++        document.getElementById('editAccessCode').value = accessCode;
++    }
++
++    try {
++        loading.show();
++        const response = await fetch('/api/share/parse', {
++            method: 'POST',
++            headers: { 'Content-Type': 'application/json' },
++            body: JSON.stringify({ shareLink: parsedShareLink, accessCode, accountId })
++        });
++        const data = await response.json();
++        if (data.success && data.data && data.data.length > 0) {
++            document.getElementById('shareFolder').value = data.data[0].name;
++            document.getElementById('shareFolderId').value = data.data[0].id;
++        } else {
++            if (data.error) {
++                shareParseError.textContent = `解析失败: ${data.error}`;
++            }
++        }
++    } catch (error) {
++        shareParseError.textContent = `操作失败: ${error.message}`;
++    } finally {
++        loading.hide();
++    }
++}
++
+ function closeEditTaskModal() {
+     document.getElementById('editTaskModal').style.display = 'none';
+ }
+ 
+ function initEditTaskForm() {
++    const debouncedHandleShare = debounce(parseEditShareLink, 500);
++    const shareInputs = document.querySelectorAll('[data-edit-share-input]');
++    shareInputs.forEach(input => {
++        input.addEventListener('blur', debouncedHandleShare);
++    });
++
+     document.getElementById('shareFolder').addEventListener('click', (e) => {
+         e.preventDefault();
+         const accountId = document.getElementById('editAccountId').value;
+@@ -84,6 +131,8 @@ function initEditTaskForm() {
+         const totalEpisodes = document.getElementById('editTotalEpisodes').value;
+         const shareFolderName = document.getElementById('shareFolder').value;
+         const shareFolderId = document.getElementById('shareFolderId').value;
++        const shareLink = document.getElementById('editShareLink').value;
++        const accessCode = document.getElementById('editAccessCode').value;
+         const status = document.getElementById('editStatus').value;
+ 
+         const matchPattern = document.getElementById('editMatchPattern').value
+@@ -102,6 +151,8 @@ function initEditTaskForm() {
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify({
+                     resourceName,
++                    shareLink,
++                    accessCode,
+                     realFolderId,
+                     currentEpisodes: currentEpisodes?parseInt(currentEpisodes):0,
+                     totalEpisodes: totalEpisodes?parseInt(totalEpisodes):0,
+@@ -130,4 +181,4 @@ function initEditTaskForm() {
+             message.warning('修改任务失败：' + error.message);
+         }
+     });
+-}
+\ No newline at end of file
++}
+diff --git a/src/services/task.js b/src/services/task.js
+index 71de725..bd2af60 100644
+--- a/src/services/task.js
++++ b/src/services/task.js
+@@ -818,6 +818,10 @@ class TaskService {
+         });
+         if (!task) throw new Error('任务不存在');
+ 
++        const shareLinkChanged = typeof updates.shareLink === 'string'
++            && updates.shareLink.trim()
++            && updates.shareLink.trim() !== task.shareLink;
++
+         // 如果原realFolderName和现realFolderName不一致 则需要删除原strm
+         if (updates.realFolderName && updates.realFolderName !== task.realFolderName && ConfigService.getConfigValue('strm.enable')) {
+             // 删除原strm
+@@ -825,9 +829,69 @@ class TaskService {
+             const folderName = task.realFolderName.substring(task.realFolderName.indexOf('/') + 1);
+             new StrmService().deleteDir(path.join(task.account.localStrmPrefix, folderName))
+         }
++
++        if (shareLinkChanged) {
++            const account = await this.accountRepo.findOneBy({ id: task.accountId });
++            if (!account) {
++                throw new Error('账号不存在');
++            }
++
++            const cloud189 = Cloud189Service.getInstance(account);
++            const { url: parsedShareLink, accessCode: parsedAccessCode } = cloud189Utils.parseCloudShare(updates.shareLink.trim());
++            const nextAccessCode = (updates.accessCode || parsedAccessCode || '').trim();
++            const shareCode = cloud189Utils.parseShareCode(parsedShareLink);
++            const shareInfo = await this.getShareInfo(cloud189, shareCode);
++
++            if (shareInfo.shareMode == 1) {
++                if (!nextAccessCode) {
++                    throw new Error('新的分享链接为私密链接, 请输入访问码');
++                }
++                const accessCodeResponse = await cloud189.checkAccessCode(shareCode, nextAccessCode);
++                if (!accessCodeResponse) {
++                    throw new Error('校验访问码失败');
++                }
++                if (!accessCodeResponse.shareId) {
++                    throw new Error('访问码无效');
++                }
++                shareInfo.shareId = accessCodeResponse.shareId;
++            }
++
++            task.shareLink = parsedShareLink;
++            task.accessCode = nextAccessCode;
++            task.shareId = shareInfo.shareId;
++            task.shareMode = shareInfo.shareMode;
++            task.shareFileId = shareInfo.fileId;
++            task.isFolder = shareInfo.isFolder;
++
++            const shouldKeepRootFolder = !task.shareFolderId
++                || task.shareFolderId === task.shareFileId
++                || task.shareFolderId === task.shareId
++                || task.shareFolderName === task.resourceName
++                || !task.shareFolderName;
++
++            if (shouldKeepRootFolder || !shareInfo.isFolder) {
++                task.shareFolderId = shareInfo.fileId;
++                task.shareFolderName = '';
++            } else {
++                const shareDir = await cloud189.listShareDir(shareInfo.shareId, shareInfo.fileId, shareInfo.shareMode, nextAccessCode);
++                const folderList = shareDir?.fileListAO?.folderList || [];
++                const matchedFolder = folderList.find(folder => folder.name === task.shareFolderName);
++                if (matchedFolder) {
++                    task.shareFolderId = matchedFolder.id;
++                    task.shareFolderName = matchedFolder.name;
++                } else {
++                    task.shareFolderId = shareInfo.fileId;
++                    task.shareFolderName = '';
++                }
++            }
++        }
++
+         // 只允许更新特定字段
+         const allowedFields = ['resourceName', 'realFolderId', 'currentEpisodes', 'totalEpisodes', 'status','realFolderName', 'shareFolderName', 'shareFolderId', 'matchPattern','matchOperator','matchValue','remark', 'enableCron', 'cronExpression', 'enableTaskScraper'];
+         for (const field of allowedFields) {
++            if (shareLinkChanged && (field === 'shareFolderName' || field === 'shareFolderId')) {
++                continue;
++            }
+             if (updates[field] !== undefined) {
+                 task[field] = updates[field];
+             }
+@@ -856,6 +920,9 @@ class TaskService {
+         if (task.matchPattern && !task.matchValue) {
+             throw new Error('匹配模式需要提供匹配值');
+         }
++        if (task.enableCron && !task.cronExpression) {
++            throw new Error('开启自定义定时任务时, Cron 表达式不能为空');
++        }
+         const newTask = await this.taskRepo.save(task)
+         SchedulerService.removeTaskJob(task.id)
+         if (task.enableCron && task.cronExpression) {
+@@ -1613,4 +1680,4 @@ class TaskService {
+     }
+ }
+ 
+-module.exports = { TaskService };
+\ No newline at end of file
++module.exports = { TaskService };
