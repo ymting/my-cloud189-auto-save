@@ -745,8 +745,23 @@ class TaskService {
             // 处理新文件并保存到数据库和云盘
             if (newFiles.length > 0) {
                 const { fileNameList, fileCount } = await this._handleNewFiles(task, newFiles, cloud189, mediaSuffixs);
-                const resourceName = task.shareFolderName? `${task.resourceName}/${task.shareFolderName}` : task.resourceName;
-                saveResults.push(`${resourceName}追更${fileCount}集: \n${fileNameList.join('\n')}`);
+                const resourceName = task.resourceName;
+                const folderPath = task.realFolderName || task.realFolderId || '';
+                const totalEps = task.totalEpisodes > 0 ? task.totalEpisodes : '?';
+                const progressEps = existingMediaCount + fileCount;
+
+                // 构建具有表头的结构化通知消息
+                const lines = [
+                    `【天翼云转存】`,
+                    `✅《${resourceName}》新增 ${fileCount} 集`,
+                    `📁 ${folderPath}`,
+                    ...fileNameList,
+                ];
+                if (task.totalEpisodes > 0 || existingMediaCount > 0) {
+                    lines.push(`🚀 当前进度：${progressEps}${task.totalEpisodes > 0 ? '/' + task.totalEpisodes : ''} 集`);
+                }
+
+                saveResults.push(lines.join('\n'));
                 const firstExecution = !task.lastFileUpdateTime;
                 task.status = 'processing';
                 task.lastFileUpdateTime = new Date();
