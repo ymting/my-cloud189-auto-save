@@ -665,9 +665,38 @@ class TaskService {
             }
             task.account = account;
             const cloud189 = Cloud189Service.getInstance(account);
+
+            // 每次执行都重新获取分享信息以确保 shareId 始终有效（部分链接类型的 shareId 是会话级别的）
+            let shareId = task.shareId;
+            let shareFolderId = task.shareFolderId;
+            let shareMode = task.shareMode;
+            let isFolder = task.isFolder;
+            if (task.shareLink) {
+                try {
+                    const shareCode = cloud189Utils.parseShareCode(task.shareLink);
+                    if (shareCode) {
+                        const freshShareInfo = await this.getShareInfo(cloud189, shareCode);
+                        if (freshShareInfo) {
+                            if (freshShareInfo.shareMode == 1 && task.accessCode) {
+                                const accessCodeResp = await cloud189.checkAccessCode(shareCode, task.accessCode);
+                                if (accessCodeResp?.shareId) freshShareInfo.shareId = accessCodeResp.shareId;
+                            }
+                            shareId = freshShareInfo.shareId;
+                            shareMode = freshShareInfo.shareMode;
+                            isFolder = freshShareInfo.isFolder;
+                            // 如果 shareFolderId 是根目录，也用新 fileId 替换
+                            if (!task.shareFolderName && shareFolderId === task.shareFileId) {
+                                shareFolderId = freshShareInfo.fileId;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    logTaskEvent(`重新获取分享信息失败，使用缓存数据: ${e.message}`);
+                }
+            }
+
              // 获取分享文件列表并进行增量转存
-             logTaskEvent(`[DEBUG] listShareDir params => shareId:${task.shareId} shareFolderId:${task.shareFolderId} shareMode:${task.shareMode} isFolder:${task.isFolder}`);
-             const shareDir = await cloud189.listShareDir(task.shareId, task.shareFolderId, task.shareMode,task.accessCode, task.isFolder);
+             const shareDir = await cloud189.listShareDir(shareId, shareFolderId, shareMode, task.accessCode, isFolder);
              if(shareDir.res_code == "ShareAuditWaiting") {
                 logTaskEvent("分享链接审核中, 等待下次执行")
                 return ''
