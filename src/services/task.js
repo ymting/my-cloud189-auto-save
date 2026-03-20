@@ -754,6 +754,7 @@ class TaskService {
                 const folderPath = task.realFolderName || task.realFolderId || '';
                 const totalEps = task.totalEpisodes > 0 ? task.totalEpisodes : '?';
                 const progressEps = existingMediaCount + fileCount;
+                const latestSavedFile = [...newFiles].reverse().find(file => !file.isFolder);
 
                 // 构建具有表头的结构化通知消息
                 const lines = [
@@ -771,6 +772,9 @@ class TaskService {
                 task.status = 'processing';
                 task.lastFileUpdateTime = new Date();
                 task.currentEpisodes = existingMediaCount + fileCount;
+                if (latestSavedFile?.name) {
+                    task.lastSavedFileName = latestSavedFile.name;
+                }
                 task.retryCount = 0;
                 process.nextTick(() => {
                     this.eventService.emit('taskComplete', new TaskCompleteEventDto({
@@ -967,6 +971,7 @@ class TaskService {
             task.status = 'pending';
             task.lastFileUpdateTime = null;
             task.lastCheckTime = null;
+            task.lastSavedFileName = null;
             await taskCacheManager.clearCache(task.id);
             logTaskEvent(`任务[${task.resourceName}]资源链接或源目录已变更，已重置追更进度并清空任务缓存`);
         }
