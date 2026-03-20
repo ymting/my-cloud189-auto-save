@@ -42,8 +42,8 @@
 
 ### 4. 自动化 Docker 构建 (GHCR)
 - 内置 GitHub Actions 工作流（`ghcr-docker-image.yml`）。
-- **只要一 Push 代码到 `main` 分支**，GitHub 就会免费在后台帮你打包并推送至 Github Container Registry (`ghcr.io`)。
-- **自动版本标签**：镜像会同时打 `:latest` 和 `:版本号`（如 `:2.2.50`）两个标签，方便回滚到指定版本。
+- **Push 到 `main` / `master` / `dev` 分支即可自动构建**，其中 `dev` 分支会额外产出开发环境镜像标签。
+- **自动版本标签**：正式分支镜像会同时打 `:latest` 和 `:版本号`（如 `:2.2.51`），`dev` 分支会打 `:dev-latest` 和 `:dev-版本号`（如 `:dev-2.2.51`）。
 - 在任何机器上只需要拉取自己的私服镜像 `docker pull ghcr.io/<你的用户名>/my-cloud189-auto-save:latest` 即可无缝部署！
 
 ### 5. 任务文件过滤缓存 (性能优化)
