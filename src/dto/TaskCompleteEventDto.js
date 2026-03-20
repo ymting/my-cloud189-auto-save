@@ -7,6 +7,7 @@ class TaskCompleteEventDto  {
         this.taskService = data?.taskService;
         this.taskRepo = data?.taskRepo;
         this.firstExecution = data?.firstExecution;
+        this.existingFiles = data?.existingFiles;
     }
 }
 

@@ -17,6 +17,7 @@ class TaskEventHandler {
         logTaskEvent(` ${task.resourceName} 触发事件:`);
         try {
             await this._handleAutoRename(taskCompleteEventDto);
+            await this._handleLatestSavedDisplay(taskCompleteEventDto);
             await this._handleStrmGeneration(taskCompleteEventDto);
             await this._handleAlistCache(taskCompleteEventDto);
             await this._handleMediaScraping(taskCompleteEventDto);
@@ -26,6 +27,97 @@ class TaskEventHandler {
             logTaskEvent(`任务完成后处理失败: ${error.message}`);
         }
         logTaskEvent(`================事件处理完成================`);
+    }
+
+    _extractEpisodeInfo(fileName) {
+        if (!fileName) return null;
+        const patterns = [
+            /S(\d{1,2})E(\d{1,4})/i,
+            /第\s*(\d{1,4})\s*[集话话]/,
+            /(?:EP|E)(\d{1,4})(?!\d)/i
+        ];
+        for (const pattern of patterns) {
+            const match = fileName.match(pattern);
+            if (!match) continue;
+            if (match.length >= 3 && /S/i.test(match[0])) {
+                return {
+                    season: parseInt(match[1], 10),
+                    episode: parseInt(match[2], 10),
+                    label: `S${match[1].padStart(2, '0')}E${match[2].padStart(2, '0')}`
+                };
+            }
+            const episode = parseInt(match[1], 10);
+            return {
+                season: null,
+                episode,
+                label: `第${episode}集`
+            };
+        }
+        return null;
+    }
+
+    _isSeriesTask(task, fileList) {
+        if (task.videoType) {
+            return task.videoType !== 'movie';
+        }
+        if ((task.totalEpisodes || 0) > 1) {
+            return true;
+        }
+        return fileList.some(file => this._extractEpisodeInfo(file.name));
+    }
+
+    async _handleLatestSavedDisplay(taskCompleteEventDto) {
+        const { task, taskRepo } = taskCompleteEventDto;
+        const finalFiles = (taskCompleteEventDto.fileList || []).filter(file => !file.isFolder);
+        if (finalFiles.length === 0 || !taskRepo) {
+            return;
+        }
+
+        const latestFile = finalFiles[finalFiles.length - 1];
+        let lastSavedDisplayText = latestFile.name;
+        let missingEpisodes = null;
+
+        if (this._isSeriesTask(task, finalFiles)) {
+            const allFiles = [
+                ...((taskCompleteEventDto.existingFiles || []).filter(file => !file.isFolder)),
+                ...finalFiles
+            ];
+            const episodeInfos = allFiles
+                .map(file => ({ file, episodeInfo: this._extractEpisodeInfo(file.name) }))
+                .filter(item => item.episodeInfo && Number.isInteger(item.episodeInfo.episode));
+
+            if (episodeInfos.length > 0) {
+                episodeInfos.sort((a, b) => {
+                    const seasonA = a.episodeInfo.season || 1;
+                    const seasonB = b.episodeInfo.season || 1;
+                    if (seasonA !== seasonB) return seasonA - seasonB;
+                    return a.episodeInfo.episode - b.episodeInfo.episode;
+                });
+
+                const latestEpisode = episodeInfos[episodeInfos.length - 1].episodeInfo;
+                lastSavedDisplayText = `已更新到${latestEpisode.label}`;
+
+                const targetSeason = latestEpisode.season || episodeInfos[0].episodeInfo.season || 1;
+                const seasonEpisodes = episodeInfos
+                    .filter(item => (item.episodeInfo.season || 1) === targetSeason)
+                    .map(item => item.episodeInfo.episode);
+                const episodeSet = new Set(seasonEpisodes);
+                const missing = [];
+                for (let ep = 1; ep < latestEpisode.episode; ep++) {
+                    if (!episodeSet.has(ep)) {
+                        missing.push(targetSeason ? `S${String(targetSeason).padStart(2, '0')}E${String(ep).padStart(2, '0')}` : `第${ep}集`);
+                    }
+                }
+                if (missing.length > 0) {
+                    missingEpisodes = JSON.stringify(missing);
+                }
+            }
+        }
+
+        task.lastSavedFileName = latestFile.name;
+        task.lastSavedDisplayText = lastSavedDisplayText;
+        task.missingEpisodes = missingEpisodes;
+        await taskRepo.save(task);
     }
     async _handleAutoRename(taskCompleteEventDto) {
         try {

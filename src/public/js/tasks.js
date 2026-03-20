@@ -42,7 +42,34 @@ function createProgressRing(current, total) {
 }
 
 function formatLatestSavedFile(task) {
-    return task.lastSavedFileName || '暂无转存记录';
+    return task.lastSavedDisplayText || task.lastSavedFileName || '暂无转存记录';
+}
+
+function formatMissingEpisodes(task) {
+    if (!task.missingEpisodes) {
+        return '';
+    }
+    try {
+        const missingEpisodes = JSON.parse(task.missingEpisodes);
+        if (!missingEpisodes.length) {
+            return '';
+        }
+        return `缺失 ${missingEpisodes.length} 集`;
+    } catch (error) {
+        return '';
+    }
+}
+
+function formatMissingEpisodesTitle(task) {
+    if (!task.missingEpisodes) {
+        return '';
+    }
+    try {
+        const missingEpisodes = JSON.parse(task.missingEpisodes);
+        return missingEpisodes.join(', ');
+    } catch (error) {
+        return '';
+    }
 }
 
 var taskList = []
@@ -79,6 +106,7 @@ async function fetchTasks() {
                     <td data-label="更新数/总数">
                         <div>${task.currentEpisodes || 0}/${task.totalEpisodes || '未知'}${progressRing}</div>
                         <div class='ellipsis' title="${formatLatestSavedFile(task)}">最新：${formatLatestSavedFile(task)}</div>
+                        ${formatMissingEpisodes(task) ? `<div class='ellipsis' title="${formatMissingEpisodesTitle(task)}">${formatMissingEpisodes(task)}</div>` : ''}
                     </td>
                     <td data-label="转存时间">${formatDateTime(task.lastFileUpdateTime)}</td>
                     <td data-label="备注">${task.remark?task.remark:''}</td>

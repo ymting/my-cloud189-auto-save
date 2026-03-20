@@ -719,6 +719,7 @@ class TaskService {
                 if (!file.isFolder) {
                     acc.existingFiles.add(file.md5);
                     acc.existingFileNames.add(file.name);
+                    acc.existingFileList.push(file);
                     if ((task.totalEpisodes == null || task.totalEpisodes <= 0) || this._checkFileSuffix(file, true, mediaSuffixs)) {
                         acc.existingMediaCount++;
                     }
@@ -727,6 +728,7 @@ class TaskService {
             }, { 
                 existingFiles: new Set(), 
                 existingFileNames: new Set(), 
+                existingFileList: [],
                 existingMediaCount: 0 
             });
             let aiFiltered = false;
@@ -772,17 +774,17 @@ class TaskService {
                 task.status = 'processing';
                 task.lastFileUpdateTime = new Date();
                 task.currentEpisodes = existingMediaCount + fileCount;
-                if (latestSavedFile?.name) {
-                    task.lastSavedFileName = latestSavedFile.name;
-                }
                 task.retryCount = 0;
                 process.nextTick(() => {
                     this.eventService.emit('taskComplete', new TaskCompleteEventDto({
                         task,
                         cloud189,
                         fileList: newFiles,
+                        existingFiles: folderFiles,
                         overwriteStrm: false,
-                        firstExecution: firstExecution
+                        firstExecution: firstExecution,
+                        taskService: this,
+                        taskRepo: this.taskRepo
                     }));
                 })
             } else if (task.lastFileUpdateTime) {
@@ -972,6 +974,8 @@ class TaskService {
             task.lastFileUpdateTime = null;
             task.lastCheckTime = null;
             task.lastSavedFileName = null;
+            task.lastSavedDisplayText = null;
+            task.missingEpisodes = null;
             await taskCacheManager.clearCache(task.id);
             logTaskEvent(`任务[${task.resourceName}]资源链接或源目录已变更，已重置追更进度并清空任务缓存`);
         }
