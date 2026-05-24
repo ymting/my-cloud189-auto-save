@@ -385,36 +385,27 @@ class TaskService {
                         logTaskEvent(`[AI重命名] 使用提取的 TMDB ID ${extractedTmdbId} 直接查询详情...`);
                         const tmdbService = new TMDBService();
 
-                        // 根据用户指定的类型查询，未指定时先尝试 TV 再尝试 Movie
+                        // 使用启发式推断结果决定查询顺序，auto-detect 的 videoType 作为回退
                         let detail = null;
-                        if (taskDto?.videoType === 'movie') {
+                        const searchType = inferredType || taskDto?.videoType || 'tv';
+                        if (searchType === 'movie') {
                             detail = await tmdbService.getMovieDetails(extractedTmdbId);
-                            tmdbType = 'movie';
-                        } else if (taskDto?.videoType === 'tv') {
-                            detail = await tmdbService.getTVDetails(extractedTmdbId);
-                            tmdbType = 'tv';
-                        } else {
-                            // 未指定类型，使用启发式推断结果决定搜索顺序
-                            const searchType = inferredType || 'tv';
-                            if (searchType === 'movie') {
-                                detail = await tmdbService.getMovieDetails(extractedTmdbId);
-                                if (detail && detail.title) {
-                                    tmdbType = 'movie';
-                                } else {
-                                    detail = await tmdbService.getTVDetails(extractedTmdbId);
-                                    if (detail && detail.title) {
-                                        tmdbType = 'tv';
-                                    }
-                                }
+                            if (detail && detail.title) {
+                                tmdbType = 'movie';
                             } else {
                                 detail = await tmdbService.getTVDetails(extractedTmdbId);
                                 if (detail && detail.title) {
                                     tmdbType = 'tv';
-                                } else {
-                                    detail = await tmdbService.getMovieDetails(extractedTmdbId);
-                                    if (detail && detail.title) {
-                                        tmdbType = 'movie';
-                                    }
+                                }
+                            }
+                        } else {
+                            detail = await tmdbService.getTVDetails(extractedTmdbId);
+                            if (detail && detail.title) {
+                                tmdbType = 'tv';
+                            } else {
+                                detail = await tmdbService.getMovieDetails(extractedTmdbId);
+                                if (detail && detail.title) {
+                                    tmdbType = 'movie';
                                 }
                             }
                         }
