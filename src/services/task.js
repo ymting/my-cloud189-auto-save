@@ -206,7 +206,8 @@ class TaskService {
 
         // 3. 移除季集信息 (S01E01, S01, E01, 第1集, 第1季 等)
         name = name.replace(/\.S\d+[-_ ]*E\d+/gi, '.');  // S01E01
-        name = name.replace(/\.S\d+/gi, '.');            // S01
+        name = name.replace(/\.S\d+.*/i, '');            // S01 → 截断其后所有内容
+        name = name.replace(/\s+S\d+\s*.*/i, '');        // S01 (空格版) → 截断
         name = name.replace(/\.E[P]?\d+/gi, '.');        // E01, EP01
         name = name.replace(/\.第\s*\d+\s*[集季话]/gi, '.'); // 第1集, 第1季, 第1话
 
@@ -321,8 +322,8 @@ class TaskService {
 
             // ====== 启发式判断视频类型（在 TMDB 搜索前分析资源特征） ======
             let inferredType = null; // 启发式推断的类型，优先级低于用户指定
+            // 1. 根据保存路径中的关键字判断（仅当用户未指定类型时）
             if (!taskDto?.videoType) {
-                // 1. 根据保存路径中的关键字判断
                 const savePath = taskDto?.realFolderName || '';
                 const moviePathKeywords = ['/电影/', '/Movies/', '/Movie/', '/movie/', '/影片/'];
                 const tvPathKeywords = ['/电视剧/', '/TV/', '/Tv/', '/tv/', '/剧集/', '/动漫/', '/番剧/'];
@@ -333,31 +334,30 @@ class TaskService {
                     inferredType = 'tv';
                     logTaskEvent(`[AI重命名] 启发式判断：保存路径含电视剧关键字 -> 推断为电视剧`);
                 }
+            }
 
-                // 2. 根据文件数量判断（单文件更可能是电影）
-                if (!inferredType && files && files.length > 0) {
-                    const mediaFiles = files.filter(f => !f.isFolder);
-                    if (mediaFiles.length === 1) {
-                        inferredType = 'movie';
-                        logTaskEvent(`[AI重命名] 启发式判断：仅1个媒体文件 -> 推断为电影`);
-                    }
+            // 2. 根据文件数量判断（单文件更可能是电影）
+            if (!inferredType && files && files.length > 0) {
+                const mediaFiles = files.filter(f => !f.isFolder);
+                if (mediaFiles.length === 1) {
+                    inferredType = 'movie';
+                    logTaskEvent(`[AI重命名] 启发式判断：仅1个媒体文件 -> 推断为电影`);
                 }
+            }
 
-                // 3. 根据文件名中的季集信息判断（有季集标识则是电视剧）
-                if (!inferredType && files && files.length > 0) {
-                    const hasEpisodePattern = files.some(f =>
-                        /S\d+[-_ ]*E\d+|第\s*\d+\s*[集话]|EP?\d+/i.test(f.name || '')
-                    );
-                    if (hasEpisodePattern) {
-                        inferredType = 'tv';
-                        logTaskEvent(`[AI重命名] 启发式判断：文件名含季集标识 -> 推断为电视剧`);
-                    }
+            // 3. 根据文件名中的季集信息判断（有季集标识则是电视剧）
+            if (!inferredType && files && files.length > 0) {
+                const hasEpisodePattern = files.some(f =>
+                    /S\d+[-_ ]*E\d+|第\s*\d+\s*[集话]|EP?\d+/i.test(f.name || '')
+                );
+                if (hasEpisodePattern) {
+                    inferredType = 'tv';
+                    logTaskEvent(`[AI重命名] 启发式判断：文件名含季集标识 -> 推断为电视剧`);
                 }
+            }
 
-                // 4. 多文件且无季集信息，可能是电影合集，仍优先搜电视剧（安全回退）
-                if (inferredType) {
-                    logTaskEvent(`[AI重命名] 启发式判断最终结果: ${inferredType === 'movie' ? '电影' : '电视剧'}`);
-                }
+            if (inferredType) {
+                logTaskEvent(`[AI重命名] 启发式判断最终结果: ${inferredType === 'movie' ? '电影' : '电视剧'}`);
             }
 
             try {
@@ -385,16 +385,20 @@ class TaskService {
                         logTaskEvent(`[AI重命名] 使用提取的 TMDB ID ${extractedTmdbId} 直接查询详情...`);
                         const tmdbService = new TMDBService();
 
-                        // 根据用户指定的类型查询，未指定时先尝试 TV 再尝试 Movie
+                        // 使用启发式推断结果决定查询顺序，auto-detect 的 videoType 作为回退
                         let detail = null;
-                        if (taskDto?.videoType === 'movie') {
+                        const searchType = inferredType || taskDto?.videoType || 'tv';
+                        if (searchType === 'movie') {
                             detail = await tmdbService.getMovieDetails(extractedTmdbId);
-                            tmdbType = 'movie';
-                        } else if (taskDto?.videoType === 'tv') {
-                            detail = await tmdbService.getTVDetails(extractedTmdbId);
-                            tmdbType = 'tv';
+                            if (detail && detail.title) {
+                                tmdbType = 'movie';
+                            } else {
+                                detail = await tmdbService.getTVDetails(extractedTmdbId);
+                                if (detail && detail.title) {
+                                    tmdbType = 'tv';
+                                }
+                            }
                         } else {
-                            // 未指定类型，优先尝试 TV（因为 CAS 资源多为剧集）
                             detail = await tmdbService.getTVDetails(extractedTmdbId);
                             if (detail && detail.title) {
                                 tmdbType = 'tv';
@@ -937,17 +941,43 @@ class TaskService {
                     const tmdbApiKey = ConfigService.getConfigValue('tmdb.tmdbApiKey');
                     if (tmdbApiKey && !task.videoType) {
                         try {
+                            // 1. 根据保存路径启发式推断
+                            const savePath = task.realFolderName || '';
+                            const movieKeywords = ['/电影/', '/Movies/', '/movie/', '/影片/'];
+                            const tvKeywords = ['/电视剧/', '/TV/', '/tv/', '/剧集/', '/动漫/', '/番剧/',
+                                                '/国产剧/', '/外语剧/', '/更新中/', '/纪录片/'];
+                            let inferredType = null;
+                            if (movieKeywords.some(k => savePath.includes(k))) {
+                                inferredType = 'movie';
+                            } else if (tvKeywords.some(k => savePath.includes(k))) {
+                                inferredType = 'tv';
+                            }
+
+                            // 2. 根据任务名中的季集标识推断（S01E01、Season、第1季等）
+                            if (!inferredType) {
+                                const hasEpisodePattern = /S\d{1,2}[-_ ]*E\d{1,3}|Season\s*\d+|第\s*\d+\s*[季集话]|\d{1,4}x\d{1,3}/i.test(task.resourceName || '');
+                                if (hasEpisodePattern) {
+                                    inferredType = 'tv';
+                                }
+                            }
+
+                            // 3. 按推断结果决定查询顺序
                             const tmdbService = new TMDBService();
-                            const tvDetail = await tmdbService.getTVDetails(extractedTmdbId);
-                            if (tvDetail && tvDetail.title) {
+                            let movieDetail = null, tvDetail = null;
+                            if (inferredType === 'movie') {
+                                movieDetail = await tmdbService.getMovieDetails(extractedTmdbId);
+                                if (!movieDetail?.title) tvDetail = await tmdbService.getTVDetails(extractedTmdbId);
+                            } else {
+                                tvDetail = await tmdbService.getTVDetails(extractedTmdbId);
+                                if (!tvDetail?.title) movieDetail = await tmdbService.getMovieDetails(extractedTmdbId);
+                            }
+
+                            if (movieDetail?.title) {
+                                task.videoType = 'movie';
+                                task.tmdbTitle = movieDetail.title;
+                            } else if (tvDetail?.title) {
                                 task.videoType = 'tv';
                                 task.tmdbTitle = tvDetail.title;
-                            } else {
-                                const movieDetail = await tmdbService.getMovieDetails(extractedTmdbId);
-                                if (movieDetail && movieDetail.title) {
-                                    task.videoType = 'movie';
-                                    task.tmdbTitle = movieDetail.title;
-                                }
                             }
                         } catch (e) {
                             logTaskEvent(`[任务执行] TMDB ID ${extractedTmdbId} 类型检测失败: ${e.message}`);
