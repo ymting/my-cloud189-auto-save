@@ -13,7 +13,7 @@ const { Not, IsNull, Like } = require('typeorm');
 // emby接口
 class EmbyService {
     constructor(taskService) {
-        this.enable = ConfigService.getConfigValue('emby');
+        this.enable = ConfigService.getConfigValue('emby.enable');
         this.embyUrl = ConfigService.getConfigValue('emby.serverUrl');
         this.embyApiKey = ConfigService.getConfigValue('emby.apiKey');
         this.embyPathReplace = ''
