@@ -17,7 +17,7 @@ const TelegramBotManager = require('./utils/TelegramBotManager');
 const fs = require('fs').promises;
 const path = require('path');
 const { setupCloudSaverRoutes, clearCloudSaverToken } = require('./sdk/cloudsaver');
-const { Like, Not, IsNull, In, Or } = require('typeorm');
+const { Like, Not, IsNull, In, Or, MoreThan } = require('typeorm');
 const cors = require('cors'); 
 const { EmbyService } = require('./services/emby');
 const { StrmService } = require('./services/strm');
@@ -340,13 +340,29 @@ AppDataSource.initialize().then(async () => {
     // 任务相关API
     app.get('/api/tasks', async (req, res) => {
         const { status, search } = req.query;
-        let whereClause = { }; // 用于构建最终的 where 条件
+        let whereClause = { };
 
         // 基础条件（AND）
         if (status && status !== 'all') {
-            whereClause.status = status;
+            if (status === 'processing') {
+                // 追剧中 = processing 或 pending但有内容
+                whereClause = [
+                    { status: 'processing', enableSystemProxy: Or(IsNull(), false) },
+                    { status: 'pending', currentEpisodes: MoreThan(0), enableSystemProxy: Or(IsNull(), false) }
+                ];
+            } else if (status === 'pending') {
+                // 等待中 = pending且无内容
+                whereClause = [
+                    { status: 'pending', currentEpisodes: 0, enableSystemProxy: Or(IsNull(), false) },
+                    { status: 'pending', currentEpisodes: IsNull(), enableSystemProxy: Or(IsNull(), false) }
+                ];
+            } else {
+                whereClause.status = status;
+            }
         }
-        whereClause.enableSystemProxy = Or(IsNull(), false);
+        if (!Array.isArray(whereClause)) {
+            whereClause.enableSystemProxy = Or(IsNull(), false);
+        }
 
         // 添加搜索过滤
         if (search) {
@@ -355,12 +371,21 @@ AppDataSource.initialize().then(async () => {
                 { remark: Like(`%${search}%`) },
                 { account: { username: Like(`%${search}%`) } }
             ];
-            if (Object.keys(whereClause).length > 0) {
+            if (Array.isArray(whereClause)) {
+                // 数组where（OR条件）时，与搜索条件做笛卡尔积
+                const expandedWhere = [];
+                for (const baseCond of whereClause) {
+                    for (const searchCond of searchConditions) {
+                        expandedWhere.push({ ...baseCond, ...searchCond });
+                    }
+                }
+                whereClause = expandedWhere;
+            } else if (Object.keys(whereClause).length > 0) {
                 whereClause = searchConditions.map(searchCond => ({
-                    ...whereClause, // 包含基础条件 (如 status)
-                    ...searchCond   // 包含一个搜索条件
+                    ...whereClause,
+                    ...searchCond
                 }));
-            }else{
+            } else {
                 whereClause = searchConditions;
             }
         }
