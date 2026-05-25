@@ -41,6 +41,38 @@ class SchedulerService {
                 await taskService.clearRecycleBin(enableAutoClearRecycle, enableAutoClearFamilyRecycle);
             })   
         }
+
+        // 4. TV 剧集每日总集数刷新（自动跟踪连载剧集数变动，集数满足时自动完结）
+        this.saveDefaultTaskJob('TV剧集总集数刷新', '0 2 * * *', async () => {
+            const tasks = await taskRepo.find({ where: { videoType: 'tv' } });
+            const { TMDBService } = require('./tmdb');
+            const tmdbService = new TMDBService();
+            for (const task of tasks) {
+                if (task.status === 'completed' || !task.tmdbId) continue;
+                try {
+                    const detail = await tmdbService.getTVDetails(task.tmdbId);
+                    if (!detail?.seasons) continue;
+                    const seasonNum = (() => {
+                        const n = task.shareFolderName || task.resourceName || '';
+                        const m = n.match(/(?:Season|S|第)\s*(\d+)/i);
+                        return m ? parseInt(m[1]) : detail.lastEpisodeToAir?.season_number || null;
+                    })() || Math.max(...detail.seasons.filter(s => s.season_number > 0).map(s => s.season_number), 0);
+                    const seasonData = detail.seasons.find(s => s.season_number === seasonNum);
+                    if (seasonData?.episode_count && seasonData.episode_count !== task.totalEpisodes) {
+                        task.totalEpisodes = seasonData.episode_count;
+                        await taskRepo.save(task);
+                        logTaskEvent(`[TV更新] ${task.resourceName} 总集数更新: ${seasonData.episode_count}`);
+                    }
+                    if (task.totalEpisodes && task.currentEpisodes >= task.totalEpisodes) {
+                        task.status = 'completed';
+                        await taskRepo.save(task);
+                        logTaskEvent(`[TV完结] ${task.resourceName} 已完结（${task.currentEpisodes}/${task.totalEpisodes}）`);
+                    }
+                } catch (e) {
+                    logTaskEvent(`[TV更新] ${task.resourceName} 失败: ${e.message}`);
+                }
+            }
+        });
     }
 
     static saveTaskJob(task, taskService) {
