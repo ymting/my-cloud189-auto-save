@@ -435,6 +435,20 @@ class TaskService {
                                 tmdbType = 'movie';
                                 if (movieResult.releaseDate) year = parseInt(movieResult.releaseDate.substring(0, 4)) || year;
                                 tmdbParsed = true;
+                                if (taskDto) {
+                                    taskDto.tmdbId = String(movieResult.id);
+                                    taskDto.tmdbTitle = movieResult.title;
+                                    taskDto.videoType = 'movie';
+                                    taskDto.tmdbContent = JSON.stringify(movieResult);
+                                    if (movieResult.type === 'tv' && movieResult.seasons) {
+                                        const n = taskDto.shareFolderName || taskDto.resourceName || '';
+                                        const m = n.match(/(?:Season|S|第)\s*(\d+)/i);
+                                        const seasonNum = (m ? parseInt(m[1]) : null)
+                                            || Math.max(...movieResult.seasons.filter(s => s.season_number > 0).map(s => s.season_number), 0);
+                                        const s = movieResult.seasons.find(s => s.season_number === seasonNum);
+                                        if (s?.episode_count > 0) taskDto.totalEpisodes = s.episode_count;
+                                    }
+                                }
                             }
                         } else if (taskDto?.videoType === 'tv') {
                             const tvResult = await tmdbService.searchTV(baseName, year ? year.toString() : '');
@@ -443,6 +457,20 @@ class TaskService {
                                 tmdbType = 'tv';
                                 if (tvResult.releaseDate) year = parseInt(tvResult.releaseDate.substring(0, 4)) || year;
                                 tmdbParsed = true;
+                                if (taskDto) {
+                                    taskDto.tmdbId = String(tvResult.id);
+                                    taskDto.tmdbTitle = tvResult.title;
+                                    taskDto.videoType = 'tv';
+                                    taskDto.tmdbContent = JSON.stringify(tvResult);
+                                    if (tvResult.seasons) {
+                                        const n = taskDto.shareFolderName || taskDto.resourceName || '';
+                                        const m = n.match(/(?:Season|S|第)\s*(\d+)/i);
+                                        const seasonNum = (m ? parseInt(m[1]) : null)
+                                            || Math.max(...tvResult.seasons.filter(s => s.season_number > 0).map(s => s.season_number), 0);
+                                        const s = tvResult.seasons.find(s => s.season_number === seasonNum);
+                                        if (s?.episode_count > 0) taskDto.totalEpisodes = s.episode_count;
+                                    }
+                                }
                             }
                         } else {
                             // 未指定类型，使用启发式判断结果决定搜索优先级
@@ -457,6 +485,20 @@ class TaskService {
                                 if (primaryResult.releaseDate) year = parseInt(primaryResult.releaseDate.substring(0, 4)) || year;
                                 tmdbParsed = true;
                                 logTaskEvent(`[AI重命名] TMDB ${searchType === 'movie' ? '电影' : '电视剧'}搜索匹配成功: ${tmdbName}`);
+                                if (taskDto) {
+                                    taskDto.tmdbId = String(primaryResult.id);
+                                    taskDto.tmdbTitle = primaryResult.title;
+                                    taskDto.videoType = primaryResult.type || searchType;
+                                    taskDto.tmdbContent = JSON.stringify(primaryResult);
+                                    if ((primaryResult.type || searchType) === 'tv' && primaryResult.seasons) {
+                                        const n = taskDto.shareFolderName || taskDto.resourceName || '';
+                                        const m = n.match(/(?:Season|S|第)\s*(\d+)/i);
+                                        const seasonNum = (m ? parseInt(m[1]) : null)
+                                            || Math.max(...primaryResult.seasons.filter(s => s.season_number > 0).map(s => s.season_number), 0);
+                                        const s = primaryResult.seasons.find(s => s.season_number === seasonNum);
+                                        if (s?.episode_count > 0) taskDto.totalEpisodes = s.episode_count;
+                                    }
+                                }
                             } else {
                                 // 首选类型搜不到，尝试另一种类型
                                 const fallbackType = searchType === 'movie' ? 'tv' : 'movie';
@@ -469,6 +511,20 @@ class TaskService {
                                     if (fallbackResult.releaseDate) year = parseInt(fallbackResult.releaseDate.substring(0, 4)) || year;
                                     tmdbParsed = true;
                                     logTaskEvent(`[AI重命名] 首选类型未匹配，回退${fallbackType === 'movie' ? '电影' : '电视剧'}搜索成功: ${tmdbName}`);
+                                    if (taskDto) {
+                                        taskDto.tmdbId = String(fallbackResult.id);
+                                        taskDto.tmdbTitle = fallbackResult.title;
+                                        taskDto.videoType = fallbackResult.type || fallbackType;
+                                        taskDto.tmdbContent = JSON.stringify(fallbackResult);
+                                        if ((fallbackResult.type || fallbackType) === 'tv' && fallbackResult.seasons) {
+                                            const n = taskDto.shareFolderName || taskDto.resourceName || '';
+                                            const m = n.match(/(?:Season|S|第)\s*(\d+)/i);
+                                            const seasonNum = (m ? parseInt(m[1]) : null)
+                                                || Math.max(...fallbackResult.seasons.filter(s => s.season_number > 0).map(s => s.season_number), 0);
+                                            const s = fallbackResult.seasons.find(s => s.season_number === seasonNum);
+                                            if (s?.episode_count > 0) taskDto.totalEpisodes = s.episode_count;
+                                        }
+                                    }
                                 }
                             }
                         }
