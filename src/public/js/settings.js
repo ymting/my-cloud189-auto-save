@@ -289,6 +289,10 @@ async function saveSettings() {
         const data = await response.json();
         if (data.success) {
             message.success('保存成功');
+            // 刷新影巢按钮显示状态
+            if (typeof initHDHiveFeature === 'function') {
+                initHDHiveFeature();
+            }
         } else {
             message.warning('保存失败: ' + data.error);
         }

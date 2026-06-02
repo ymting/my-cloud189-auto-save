@@ -11,7 +11,8 @@ let hdhiveState = {
     currentCloudFilter: 'all', // 当前网盘过滤
     selectedResource: null,  // 选中的资源（用于解锁）
     unlockedData: null,      // 解锁后的数据
-    cloudFilter: null        // 网盘过滤配置（从服务器加载）
+    cloudFilter: null,       // 网盘过滤配置（从服务器加载）
+    config: null             // 影巢完整配置
 };
 
 // 云盘图标映射
@@ -37,6 +38,40 @@ const DEFAULT_CLOUD_FILTER = {
 };
 
 /**
+ * 初始化影巢功能（页面加载时调用）
+ * 根据配置显示/隐藏影巢入口按钮
+ */
+async function initHDHiveFeature() {
+    try {
+        const response = await fetch('/api/settings');
+        const data = await response.json();
+
+        if (data.success && data.data?.hdhive) {
+            hdhiveState.config = data.data.hdhive;
+            const hdhiveBtn = document.querySelector('.hdhive-btn');
+
+            // 只有启用影巢功能时才显示入口按钮
+            if (hdhiveState.config.enabled) {
+                if (hdhiveBtn) hdhiveBtn.style.display = 'flex';
+            } else {
+                if (hdhiveBtn) hdhiveBtn.style.display = 'none';
+            }
+
+            // 设置网盘过滤配置
+            if (hdhiveState.config.cloudFilter) {
+                hdhiveState.cloudFilter = hdhiveState.config.cloudFilter;
+            } else {
+                hdhiveState.cloudFilter = DEFAULT_CLOUD_FILTER;
+            }
+        }
+    } catch (error) {
+        console.error('初始化影巢功能失败:', error);
+        const hdhiveBtn = document.querySelector('.hdhive-btn');
+        if (hdhiveBtn) hdhiveBtn.style.display = 'none';
+    }
+}
+
+/**
  * 获取网盘过滤配置
  */
 async function loadCloudFilterConfig() {
@@ -45,6 +80,7 @@ async function loadCloudFilterConfig() {
         const data = await response.json();
         if (data.success && data.data?.hdhive?.cloudFilter) {
             hdhiveState.cloudFilter = data.data.hdhive.cloudFilter;
+            hdhiveState.config = data.data.hdhive;
         } else {
             hdhiveState.cloudFilter = DEFAULT_CLOUD_FILTER;
         }
@@ -58,6 +94,12 @@ async function loadCloudFilterConfig() {
  * 打开影巢搜索模态框
  */
 async function openHDHiveModal() {
+    // 检查是否配置了 API Key
+    if (!hdhiveState.config?.apiKey) {
+        message.warning('请先在系统设置中配置影巢 API Key');
+        return;
+    }
+
     const modal = document.getElementById('hdhiveModal');
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -611,8 +653,12 @@ function createTaskFromHDHive() {
     }, 300);
 }
 
-// 回车搜索
+// 页面加载初始化
 document.addEventListener('DOMContentLoaded', () => {
+    // 初始化影巢功能（根据配置显示/隐藏入口）
+    initHDHiveFeature();
+
+    // 回车搜索
     const searchInput = document.getElementById('hdhiveSearchInput');
     if (searchInput) {
         searchInput.addEventListener('keypress', (e) => {
