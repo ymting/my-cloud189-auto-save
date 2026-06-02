@@ -113,6 +113,20 @@ async function loadSettings() {
             document.getElementById('alistServer').value = settings.alist?.baseUrl || '';
             document.getElementById('alistApiKey').value = settings.alist?.apiKey || '';
 
+            // hdhive 影巢
+            document.getElementById('enableHDHive').checked = settings.hdhive?.enabled || false;
+            document.getElementById('hdhiveApiKey').value = settings.hdhive?.apiKey || '';
+            document.getElementById('hdhiveBaseUrl').value = settings.hdhive?.baseUrl || '';
+            // 网盘过滤配置
+            const cloudFilter = settings.hdhive?.cloudFilter || {};
+            document.getElementById('hdhiveCloud115').checked = cloudFilter['115'] !== false;
+            document.getElementById('hdhiveCloudQuark').checked = cloudFilter['quark'] !== false;
+            document.getElementById('hdhiveCloudAli').checked = cloudFilter['ali'] !== false;
+            document.getElementById('hdhiveCloudBaidu').checked = cloudFilter['baidu'] !== false;
+            document.getElementById('hdhiveCloud123').checked = cloudFilter['123'] !== false;
+            document.getElementById('hdhiveCloudXunlei').checked = cloudFilter['xunlei'] === true;
+            document.getElementById('hdhiveCloudPikpak').checked = cloudFilter['pikpak'] === true;
+
             // pushplus
             document.getElementById('enablePushPlus').checked = settings.pushplus?.enable || false;
             document.getElementById('pushplusToken').value = settings.pushplus?.token || '';
@@ -243,6 +257,20 @@ async function saveSettings() {
             enable: document.getElementById('enableAlist').checked,
             baseUrl: document.getElementById('alistServer').value,
             apiKey: document.getElementById('alistApiKey').value
+        },
+        hdhive: {
+            enabled: document.getElementById('enableHDHive').checked,
+            apiKey: document.getElementById('hdhiveApiKey').value,
+            baseUrl: document.getElementById('hdhiveBaseUrl').value || 'https://api.hdhive.com',
+            cloudFilter: {
+                '115': document.getElementById('hdhiveCloud115').checked,
+                'quark': document.getElementById('hdhiveCloudQuark').checked,
+                'ali': document.getElementById('hdhiveCloudAli').checked,
+                'baidu': document.getElementById('hdhiveCloudBaidu').checked,
+                '123': document.getElementById('hdhiveCloud123').checked,
+                'xunlei': document.getElementById('hdhiveCloudXunlei').checked,
+                'pikpak': document.getElementById('hdhiveCloudPikpak').checked
+            }
         },
         customPush: customPushConfigs
     };
