@@ -1,0 +1,106 @@
+{
+  "task": {
+    "taskExpireDays": 3,
+    "taskCheckCron": "0 19-23 * * *",
+    "cleanRecycleCron": "0 */8 * * *",
+    "maxRetries": 3,
+    "retryInterval": 300,
+    "enableAutoClearRecycle": false,
+    "enableAutoClearFamilyRecycle": false,
+    "mediaSuffix": ".mkv;.iso;.ts;.mp4;.avi;.rmvb;.wmv;.m2ts;.mpg;.flv;.rm;.mov",
+    "enableOnlySaveMedia": false,
+    "enableAutoCreateFolder": false,
+    "enableCasRapidUpload": true,
+    "enableDeleteCasFile": true,
+    "enableCasFamilyTransfer": true,
+    "enableDeleteFamilyTempFile": true
+  },
+  "wecom": {
+    "enable": false,
+    "webhook": "",
+    "corpId": "",
+    "appId": "",
+    "appSecret": "",
+    "callbackToken": "",
+    "callbackEncodingAESKey": "",
+    "callbackEnabled": false
+  },
+  "telegram": {
+    "enable": false,
+    "proxyDomain": "",
+    "botToken": "",
+    "chatId": "",
+    "bot": {
+      "enable": false,
+      "botToken": "",
+      "chatId": ""
+    }
+  },
+  "wxpusher": {
+    "enable": false,
+    "spt": ""
+  },
+  "proxy": {
+    "host": "",
+    "port": 0,
+    "username": "",
+    "password": "",
+    "services": {
+      "telegram": true,
+      "tmdb": true,
+      "cloud189": false
+    }
+  },
+  "bark": {
+    "enable": false,
+    "serverUrl": "",
+    "key": ""
+  },
+  "pushplus": {
+    "enable": false,
+    "token": "",
+    "topic": "",
+    "channel": "wechat",
+    "webhook": "",
+    "to": ""
+  },
+  "system": {
+    "username": "admin",
+    "password": "admin",
+    "baseUrl": "",
+    "apiKey": ""
+  },
+  "strm": {
+    "enable": false
+  },
+  "emby": {
+    "enable": false,
+    "serverUrl": "",
+    "apiKey": ""
+  },
+  "cloudSaver": {
+    "baseUrl": "",
+    "username": "",
+    "password": ""
+  },
+  "tmdb": {
+    "enableScraper": false,
+    "apiKey": ""
+  },
+  "openai": {
+    "enable": false,
+    "baseUrl": "",
+    "apiKey": "",
+    "model": "GLM-4-Flash-250414",
+    "rename": {
+      "template": "{name} - {se}{ext}",
+      "movieTemplate": "{name} ({year}){ext}"
+    }
+  },
+  "alist": {
+    "enable": false,
+    "baseUrl": "",
+    "apiKey": ""
+  },
+  "customPush": []
+}

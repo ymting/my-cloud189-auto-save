@@ -59,7 +59,8 @@ class ConfigService {
         services: {
           telegram: true,
           tmdb: true,
-          cloud189: false
+          cloud189: false,
+          hdhive: true
         }
       },
       bark: {
@@ -116,17 +117,7 @@ class ConfigService {
       hdhive: {
         enabled: false,
         apiKey: '',
-        baseUrl: 'https://api.hdhive.com',
-        // 网盘类型过滤配置（默认全部启用）
-        cloudFilter: {
-          '115': true,
-          'quark': true,
-          'ali': true,
-          'baidu': true,
-          '123': true,
-          'xunlei': false,
-          'pikpak': false
-        }
+        baseUrl: 'https://api.hdhive.com'
       },
       customPush: [] // 自定义推送
     };

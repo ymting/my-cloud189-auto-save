@@ -69,6 +69,7 @@ async function loadSettings() {
             document.getElementById('proxyTmdb').checked = settings.proxy?.services?.tmdb || false;
             document.getElementById('proxyOpenAI').checked = settings.proxy?.services?.openai || false;
             document.getElementById('proxyCloud189').checked = settings.proxy?.services?.cloud189 || false;
+            document.getElementById('proxyHDHive').checked = settings.proxy?.services?.hdhive || false;
             document.getElementById('proxyCustomPush').checked = settings.proxy?.services?.customPush || false;
             // Bark 设置
             document.getElementById('enableBark').checked = settings.bark?.enable || false;
@@ -117,15 +118,6 @@ async function loadSettings() {
             document.getElementById('enableHDHive').checked = settings.hdhive?.enabled || false;
             document.getElementById('hdhiveApiKey').value = settings.hdhive?.apiKey || '';
             document.getElementById('hdhiveBaseUrl').value = settings.hdhive?.baseUrl || '';
-            // 网盘过滤配置
-            const cloudFilter = settings.hdhive?.cloudFilter || {};
-            document.getElementById('hdhiveCloud115').checked = cloudFilter['115'] !== false;
-            document.getElementById('hdhiveCloudQuark').checked = cloudFilter['quark'] !== false;
-            document.getElementById('hdhiveCloudAli').checked = cloudFilter['ali'] !== false;
-            document.getElementById('hdhiveCloudBaidu').checked = cloudFilter['baidu'] !== false;
-            document.getElementById('hdhiveCloud123').checked = cloudFilter['123'] !== false;
-            document.getElementById('hdhiveCloudXunlei').checked = cloudFilter['xunlei'] === true;
-            document.getElementById('hdhiveCloudPikpak').checked = cloudFilter['pikpak'] === true;
 
             // pushplus
             document.getElementById('enablePushPlus').checked = settings.pushplus?.enable || false;
@@ -205,6 +197,7 @@ async function saveSettings() {
                 tmdb: document.getElementById('proxyTmdb').checked,
                 openai: document.getElementById('proxyOpenAI').checked,
                 cloud189: document.getElementById('proxyCloud189').checked,
+                hdhive: document.getElementById('proxyHDHive').checked,
                 customPush: document.getElementById('proxyCustomPush').checked
             }
         },
@@ -261,16 +254,7 @@ async function saveSettings() {
         hdhive: {
             enabled: document.getElementById('enableHDHive').checked,
             apiKey: document.getElementById('hdhiveApiKey').value,
-            baseUrl: document.getElementById('hdhiveBaseUrl').value || 'https://api.hdhive.com',
-            cloudFilter: {
-                '115': document.getElementById('hdhiveCloud115').checked,
-                'quark': document.getElementById('hdhiveCloudQuark').checked,
-                'ali': document.getElementById('hdhiveCloudAli').checked,
-                'baidu': document.getElementById('hdhiveCloudBaidu').checked,
-                '123': document.getElementById('hdhiveCloud123').checked,
-                'xunlei': document.getElementById('hdhiveCloudXunlei').checked,
-                'pikpak': document.getElementById('hdhiveCloudPikpak').checked
-            }
+            baseUrl: document.getElementById('hdhiveBaseUrl').value || 'https://api.hdhive.com'
         },
         customPush: customPushConfigs
     };

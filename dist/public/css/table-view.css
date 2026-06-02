@@ -1,0 +1,36 @@
+/* 表格视图样式 */
+.table-view .table-container {
+    display: block;
+    padding: 0;
+}
+
+.table-view #taskTable {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-view #taskTable thead {
+    display: table-header-group;
+}
+
+.table-view #taskTable tbody {
+    display: table-row-group;
+}
+
+.table-view #taskTable tr {
+    display: table-row;
+    transform: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+.table-view #taskTable td {
+    display: table-cell;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.table-view #taskTable td::before {
+    display: none;
+}

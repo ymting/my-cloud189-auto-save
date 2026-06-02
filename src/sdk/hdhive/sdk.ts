@@ -4,9 +4,10 @@
  */
 const ConfigService = require('../../services/ConfigService');
 const { logTaskEvent } = require('../../utils/logUtils');
+const ProxyUtil = require('../../utils/ProxyUtil');
 const got = require('got');
 
-// 网盘类型映射
+// 网盘类型映射（影巢支持的网盘类型）
 const CLOUD_TYPE_MAP: Record<string, { name: string; icon: string; color: string }> = {
   '115': { name: '115网盘', icon: '115', color: '#2196F3' },
   '123': { name: '123云盘', icon: '123', color: '#FF9800' },
@@ -14,7 +15,9 @@ const CLOUD_TYPE_MAP: Record<string, { name: string; icon: string; color: string
   'baidu': { name: '百度网盘', icon: 'baidu', color: '#06A7FF' },
   'ali': { name: '阿里云盘', icon: 'ali', color: '#FF6A00' },
   'xunlei': { name: '迅雷云盘', icon: 'xunlei', color: '#0D47A1' },
-  'pikpak': { name: 'PikPak', icon: 'pikpak', color: '#E91E63' }
+  'pikpak': { name: 'PikPak', icon: 'pikpak', color: '#E91E63' },
+  'cloud189': { name: '天翼云盘', icon: 'cloud189', color: '#FF6B00' },
+  'lenovo': { name: '联想云盘', icon: 'lenovo', color: '#E31837' }
 };
 
 // 解锁请求防抖锁（防止重复扣积分）
@@ -104,6 +107,13 @@ class HDHiveSDK {
   }
 
   /**
+   * 获取代理配置
+   */
+  private getProxyAgent(): any {
+    return ProxyUtil.getProxyAgent('hdhive');
+  }
+
+  /**
    * 测试连通性
    */
   async ping(): Promise<{ success: boolean; message: string }> {
@@ -114,6 +124,7 @@ class HDHiveSDK {
     try {
       const { body, statusCode } = await got.get(`${this.baseUrl}/api/open/ping`, {
         headers: this.buildHeaders(),
+        agent: this.getProxyAgent(),
         responseType: 'json',
         timeout: 10000,
         throwHttpErrors: false
@@ -150,6 +161,7 @@ class HDHiveSDK {
     try {
       const { body, statusCode } = await got.get(`${this.baseUrl}/api/open/quota`, {
         headers: this.buildHeaders(),
+        agent: this.getProxyAgent(),
         responseType: 'json',
         timeout: 10000,
         throwHttpErrors: false
@@ -193,6 +205,7 @@ class HDHiveSDK {
         `${this.baseUrl}/api/open/resources/${type}/${tmdbId}`,
         {
           headers: this.buildHeaders(),
+          agent: this.getProxyAgent(),
           responseType: 'json',
           timeout: 30000,
           throwHttpErrors: false
@@ -259,7 +272,9 @@ class HDHiveSDK {
         4: 'baidu',
         5: '123',
         6: 'xunlei',
-        7: 'pikpak'
+        7: 'pikpak',
+        8: 'cloud189',
+        9: 'lenovo'
       };
       return typeMap[type] || 'unknown';
     }
@@ -272,6 +287,8 @@ class HDHiveSDK {
     if (typeLower.includes('ali') || typeLower.includes('阿里')) return 'ali';
     if (typeLower.includes('xunlei') || typeLower.includes('迅雷')) return 'xunlei';
     if (typeLower.includes('pikpak')) return 'pikpak';
+    if (typeLower.includes('cloud189') || typeLower.includes('天翼') || typeLower.includes('电信')) return 'cloud189';
+    if (typeLower.includes('lenovo') || typeLower.includes('联想')) return 'lenovo';
 
     return typeLower;
   }
@@ -355,6 +372,7 @@ class HDHiveSDK {
     try {
       const { body, statusCode } = await got.post(`${this.baseUrl}/api/open/resources/unlock`, {
         headers: this.buildHeaders(),
+        agent: this.getProxyAgent(),
         json: { id: resourceId },
         responseType: 'json',
         timeout: 30000,

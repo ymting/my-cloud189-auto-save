@@ -1,0 +1,208 @@
+"use strict";
+const fs = require('fs');
+const path = require('path');
+class ConfigService {
+    constructor() {
+        // 配置文件路径
+        this._configPath = path.join(__dirname, '../../data');
+        this._configFile = this._configPath + '/config.json';
+        this._config = {
+            task: {
+                taskExpireDays: 3,
+                taskCheckCron: '0 19-23 * * *',
+                cleanRecycleCron: '0 */8 * * *',
+                maxRetries: 3,
+                retryInterval: 300,
+                enableAutoClearRecycle: false,
+                enableAutoClearFamilyRecycle: false,
+                mediaSuffix: '.mkv;.iso;.ts;.mp4;.avi;.rmvb;.wmv;.m2ts;.mpg;.flv;.rm;.mov',
+                enableOnlySaveMedia: false,
+                enableAutoCreateFolder: false,
+                enableCasRapidUpload: true,
+                enableDeleteCasFile: true,
+                enableCasFamilyTransfer: true,
+                enableDeleteFamilyTempFile: true,
+                enableAutoCheckin: true,
+                checkinCron: '15 1 * * *',
+                enableStorageAggregation: true
+            },
+            wecom: {
+                enable: false,
+                webhook: '',
+                // 以下为企业微信自建应用配置（用于双向交互）
+                corpId: '',
+                appId: '', // 自建应用 AgentId
+                appSecret: '',
+                callbackToken: '', // 接收消息 Token
+                callbackEncodingAESKey: '', // 接收消息 AES Key
+                callbackEnabled: false, // 是否启用接收消息
+            },
+            telegram: {
+                enable: false,
+                proxyDomain: '',
+                botToken: '',
+                chatId: '',
+                bot: {
+                    enable: false,
+                    botToken: '',
+                    chatId: ''
+                }
+            },
+            wxpusher: {
+                enable: false,
+                spt: ''
+            },
+            proxy: {
+                host: '',
+                port: 0,
+                username: '',
+                password: '',
+                services: {
+                    telegram: true,
+                    tmdb: true,
+                    cloud189: false,
+                    hdhive: true
+                }
+            },
+            bark: {
+                enable: false,
+                serverUrl: '',
+                key: ''
+            },
+            pushplus: {
+                enable: false, // 是否启用推送
+                token: '', // PushPlus token
+                topic: '', // 群组编码，不填仅发送给自己
+                channel: 'wechat', // 发送渠道：wechat/webhook/cp/sms/mail
+                webhook: '', // webhook编码，仅在channel为webhook时需要
+                to: '' // 好友令牌，用于指定接收消息的用户
+            },
+            system: {
+                username: 'admin',
+                password: 'admin',
+                baseUrl: '',
+                apiKey: ''
+            },
+            strm: {
+                enable: false,
+            },
+            emby: {
+                enable: false,
+                serverUrl: '',
+                apiKey: ''
+            },
+            cloudSaver: {
+                baseUrl: '',
+                username: '',
+                password: ''
+            },
+            tmdb: {
+                enableScraper: false,
+                apiKey: ''
+            },
+            openai: {
+                enable: false,
+                baseUrl: '',
+                apiKey: '',
+                model: 'GLM-4-Flash-250414',
+                rename: {
+                    template: "{name} - {se}{ext}", // 默认模板
+                    movieTemplate: "{name} ({year}){ext}", // 电影模板
+                }
+            },
+            alist: {
+                enable: false,
+                baseUrl: '',
+                apiKey: ''
+            },
+            hdhive: {
+                enabled: false,
+                apiKey: '',
+                baseUrl: 'https://api.hdhive.com',
+                // 网盘类型过滤配置（默认全部启用）
+                cloudFilter: {
+                    '115': true,
+                    'quark': true,
+                    'ali': true,
+                    'baidu': true,
+                    '123': true,
+                    'xunlei': false,
+                    'pikpak': false,
+                    'cloud189': true
+                }
+            },
+            customPush: [] // 自定义推送
+        };
+        this._init();
+    }
+    _init() {
+        try {
+            if (!fs.existsSync(this._configPath)) {
+                fs.mkdirSync(this._configPath, { recursive: true });
+            }
+            if (fs.existsSync(this._configFile)) {
+                const data = fs.readFileSync(this._configFile, 'utf8');
+                const fileConfig = JSON.parse(data);
+                this._config = this._deepMerge(this._config, fileConfig);
+            }
+            else {
+                this._saveConfig();
+            }
+        }
+        catch (error) {
+            console.error('系统配置初始化失败:', error);
+        }
+    }
+    // 添加深度合并方法
+    _deepMerge(target, source) {
+        const result = Object.assign({}, target);
+        for (const key in source) {
+            if (source[key] instanceof Object && !Array.isArray(source[key])) {
+                result[key] = this._deepMerge(result[key] || {}, source[key]);
+            }
+            else {
+                result[key] = source[key];
+            }
+        }
+        return result;
+    }
+    _saveConfig() {
+        try {
+            fs.writeFileSync(this._configFile, JSON.stringify(this._config, null, 2));
+        }
+        catch (error) {
+            console.error('系统配置保存失败:', error);
+        }
+    }
+    getConfig() {
+        return this._config;
+    }
+    setConfig(config) {
+        this._config = Object.assign(Object.assign({}, this._config), config);
+        this._saveConfig();
+    }
+    getConfigValue(key, defaultValue = null) {
+        const keys = key.split('.');
+        let value = this._config;
+        for (const k of keys) {
+            value = value === null || value === void 0 ? void 0 : value[k];
+            if (value === undefined)
+                break;
+        }
+        return value !== null && value !== void 0 ? value : defaultValue;
+    }
+    setConfigValue(key, value) {
+        const keys = key.split('.');
+        let current = this._config;
+        for (let i = 0; i < keys.length - 1; i++) {
+            if (!current[keys[i]]) {
+                current[keys[i]] = {};
+            }
+            current = current[keys[i]];
+        }
+        current[keys[keys.length - 1]] = value;
+        this._saveConfig();
+    }
+}
+// 导出单例实例
+module.exports = new ConfigService();

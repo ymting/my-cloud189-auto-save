@@ -1,0 +1,232 @@
+/* 删除确认弹窗样式 */
+
+.delete-confirm-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+.delete-confirm-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+}
+
+.delete-confirm-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--bg-color, #fff);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    min-width: 400px;
+    max-width: 500px;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+.delete-confirm-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.delete-confirm-icon {
+    font-size: 24px;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-10deg); }
+    75% { transform: rotate(10deg); }
+}
+
+.delete-confirm-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-color, #1f2937);
+}
+
+.delete-confirm-body {
+    padding: 24px;
+}
+
+.delete-confirm-body p {
+    margin: 0 0 12px 0;
+    color: var(--text-color, #6b7280);
+    font-size: 14px;
+}
+
+.delete-confirm-body .task-name {
+    font-weight: 500;
+    color: var(--text-color, #374151);
+    word-break: break-all;
+}
+
+.delete-cloud-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 12px;
+    margin-top: 16px;
+    border-radius: 8px;
+    background: var(--bg-secondary, #f9fafb);
+    transition: all 0.2s;
+    border: 1px solid var(--border-color, #e5e7eb);
+}
+
+.delete-cloud-checkbox:hover {
+    background: var(--bg-hover, #f3f4f6);
+    border-color: var(--primary-color, #4B4BFA);
+}
+
+.delete-cloud-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary-color, #4B4BFA);
+}
+
+.delete-cloud-checkbox span {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text-color, #374151);
+}
+
+.delete-warning {
+    margin-top: 12px !important;
+    padding: 10px 12px;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 6px;
+    font-size: 13px;
+    color: #ef4444;
+    border-left: 3px solid #ef4444;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.delete-confirm-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-color, #e5e7eb);
+    background: var(--bg-secondary, #f9fafb);
+    border-radius: 0 0 12px 12px;
+}
+
+.delete-confirm-footer button {
+    padding: 10px 24px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-cancel {
+    background: var(--bg-color, #fff);
+    color: var(--text-color, #374151);
+    border: 1px solid var(--border-color, #d1d5db);
+}
+
+.btn-cancel:hover {
+    background: var(--bg-hover, #f3f4f6);
+    border-color: var(--text-color, #9ca3af);
+}
+
+.btn-confirm {
+    background: #f59e0b;
+    color: white;
+}
+
+.btn-confirm:hover {
+    background: #d97706;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+}
+
+.btn-confirm-danger {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-confirm-danger:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+    .delete-confirm-content {
+        background: #1f2937;
+        border: 1px solid #374151;
+    }
+    
+    .delete-confirm-header h3 {
+        color: #f9fafb;
+    }
+    
+    .delete-confirm-body p {
+        color: #9ca3af;
+    }
+    
+    .delete-cloud-checkbox {
+        background: #111827;
+        border-color: #374151;
+    }
+    
+    .delete-cloud-checkbox:hover {
+        background: #1f2937;
+        border-color: #4B4BFA;
+    }
+    
+    .delete-cloud-checkbox span {
+        color: #e5e7eb;
+    }
+    
+    .delete-confirm-footer {
+        background: #111827;
+        border-top-color: #374151;
+    }
+    
+    .btn-cancel {
+        background: #374151;
+        color: #e5e7eb;
+        border-color: #4b5563;
+    }
+    
+    .btn-cancel:hover {
+        background: #4b5563;
+    }
+}

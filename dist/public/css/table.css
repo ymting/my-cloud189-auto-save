@@ -1,0 +1,68 @@
+/* 表格基础样式 */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    /* border-bottom: 1px solid #eee; */
+}
+
+th {
+    background-color: #fafafa;
+    font-weight: 500;
+}
+
+/* 状态标签样式 */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.status-pending { background-color: rgba(99, 102, 241, 0.1); color: #6366f1; }
+.status-processing { background-color: #fff7e6; color: #fa8c16; }
+.status-completed { background-color: #f6ffed; color: #52c41a; }
+.status-failed { background-color: #fff1f0; color: #f5222d; }
+
+/* 文本省略样式 */
+.ellipsis {
+    max-width: 150px;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+a:visited {
+    color: #6366f1;
+}
+
+.delete-cloud-options {
+    display: flex;
+    align-items: center;
+    margin-left: 16px;
+    min-width: 200px;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.checkbox-label, .delete-cloud-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    min-width: fit-content;
+}
+
+.checkbox-label input[type="checkbox"],
+.delete-cloud-option input[type="checkbox"] {
+    margin: 0;
+}

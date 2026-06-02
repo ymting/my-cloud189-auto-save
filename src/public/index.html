@@ -839,6 +839,7 @@
                                         <label><input type="checkbox" id="proxyTmdb">TMDB</label>
                                         <label><input type="checkbox" id="proxyOpenAI">OpenAI</label>
                                         <label><input type="checkbox" id="proxyCloud189">天翼云盘</label>
+                                        <label><input type="checkbox" id="proxyHDHive">影巢</label>
                                         <label><input type="checkbox" id="proxyCustomPush">自定义推送</label>
                                     </div>
                                 </div>
@@ -988,33 +989,7 @@
                                         <input type="text" id="hdhiveApiKey" placeholder="影巢 API Key">
                                         <input type="text" id="hdhiveBaseUrl" placeholder="API地址 (默认: https://api.hdhive.com)">
                                     </div>
-                                    <div class="hdhive-cloud-filter" style="margin-top: 10px;">
-                                        <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">显示网盘类型：</label>
-                                        <div class="cloud-filter-options" style="display: flex; flex-wrap: wrap; gap: 8px;">
-                                            <label class="cloud-filter-item" style="display: flex; align-items: center; gap: 4px; font-size: 12px;">
-                                                <input type="checkbox" id="hdhiveCloud115" checked> 115网盘
-                                            </label>
-                                            <label class="cloud-filter-item" style="display: flex; align-items: center; gap: 4px; font-size: 12px;">
-                                                <input type="checkbox" id="hdhiveCloudQuark" checked> 夸克网盘
-                                            </label>
-                                            <label class="cloud-filter-item" style="display: flex; align-items: center; gap: 4px; font-size: 12px;">
-                                                <input type="checkbox" id="hdhiveCloudAli" checked> 阿里云盘
-                                            </label>
-                                            <label class="cloud-filter-item" style="display: flex; align-items: center; gap: 4px; font-size: 12px;">
-                                                <input type="checkbox" id="hdhiveCloudBaidu" checked> 百度网盘
-                                            </label>
-                                            <label class="cloud-filter-item" style="display: flex; align-items: center; gap: 4px; font-size: 12px;">
-                                                <input type="checkbox" id="hdhiveCloud123" checked> 123云盘
-                                            </label>
-                                            <label class="cloud-filter-item" style="display: flex; align-items: center; gap: 4px; font-size: 12px;">
-                                                <input type="checkbox" id="hdhiveCloudXunlei"> 迅雷云盘
-                                            </label>
-                                            <label class="cloud-filter-item" style="display: flex; align-items: center; gap: 4px; font-size: 12px;">
-                                                <input type="checkbox" id="hdhiveCloudPikpak"> PikPak
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <small class="form-text">在影巢个人中心获取 API Key，支持积分解锁与一键转存</small>
+                                    <small class="form-text">在影巢个人中心获取 API Key，仅显示天翼云盘资源，支持积分解锁与一键转存</small>
                                 </div>
                             </div>
                             <div class="settings-item">
@@ -1364,16 +1339,6 @@
                         <p id="hdhiveMediaOverview"></p>
                     </div>
                     <button class="hdhive-back-btn" onclick="backToTMDBResults()">返回搜索</button>
-                </div>
-
-                <!-- 网盘分类 Tab -->
-                <div class="hdhive-tabs" id="hdhiveTabs">
-                    <button class="hdhive-tab active" data-cloud="all">全部</button>
-                    <button class="hdhive-tab" data-cloud="115">115</button>
-                    <button class="hdhive-tab" data-cloud="quark">夸克</button>
-                    <button class="hdhive-tab" data-cloud="ali">阿里</button>
-                    <button class="hdhive-tab" data-cloud="baidu">百度</button>
-                    <button class="hdhive-tab" data-cloud="123">123</button>
                 </div>
 
                 <!-- 资源列表 -->

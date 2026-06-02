@@ -1,0 +1,245 @@
+.ai-confirm-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.ai-confirm-dialog {
+    background: var(--card-bg, #ffffff);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.confirm-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.confirm-icon {
+    font-size: 32px;
+    line-height: 1;
+}
+
+.confirm-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary, #1f2937);
+}
+
+.confirm-body {
+    margin-bottom: 24px;
+}
+
+.operation-desc {
+    margin-bottom: 16px;
+}
+
+.operation-name {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: var(--text-secondary, #6b7280);
+}
+
+.operation-name strong {
+    color: var(--text-primary, #1f2937);
+    font-weight: 600;
+}
+
+.warning-text {
+    color: #f59e0b;
+    font-weight: 600;
+    font-size: 14px;
+    margin: 8px 0;
+    padding: 8px 12px;
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: 6px;
+    border-left: 3px solid #f59e0b;
+}
+
+.operation-details,
+.impact-analysis {
+    background: var(--bg-secondary, #f9fafb);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.details-title,
+.impact-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary, #6b7280);
+    margin-bottom: 8px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: 13px;
+}
+
+.detail-item .label {
+    color: var(--text-secondary, #6b7280);
+    min-width: 100px;
+}
+
+.detail-item .value {
+    color: var(--text-primary, #1f2937);
+    font-weight: 500;
+}
+
+.impact-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.impact-list li {
+    padding: 6px 0;
+    font-size: 13px;
+    color: var(--text-primary, #1f2937);
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.impact-list li:last-child {
+    border-bottom: none;
+}
+
+.confirm-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color, #e5e7eb);
+}
+
+.btn-cancel,
+.btn-confirm {
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.btn-cancel {
+    background: var(--bg-tertiary, #e5e7eb);
+    color: var(--text-secondary, #6b7280);
+}
+
+.btn-cancel:hover {
+    background: var(--bg-secondary, #d1d5db);
+}
+
+.btn-confirm {
+    background: #4B4BFA;
+    color: white;
+}
+
+.btn-confirm:hover {
+    background: #3a3ad8;
+    transform: translateY(-1px);
+}
+
+.btn-confirm.danger {
+    background: #ef4444;
+}
+
+.btn-confirm.danger:hover {
+    background: #dc2626;
+}
+
+@media (max-width: 640px) {
+    .ai-confirm-dialog {
+        padding: 16px;
+        margin: 16px;
+    }
+
+    .confirm-footer {
+        flex-direction: column-reverse;
+    }
+
+    .btn-cancel,
+    .btn-confirm {
+        width: 100%;
+        padding: 10px 20px;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .ai-confirm-dialog {
+        background: #1f2937;
+    }
+
+    .confirm-header h3 {
+        color: #f9fafb;
+    }
+
+    .operation-name,
+    .detail-item .label {
+        color: #9ca3af;
+    }
+
+    .operation-name strong,
+    .detail-item .value,
+    .impact-list li {
+        color: #f9fafb;
+    }
+
+    .operation-details,
+    .impact-analysis {
+        background: #374151;
+    }
+
+    .btn-cancel {
+        background: #4b5563;
+        color: #d1d5db;
+    }
+
+    .btn-cancel:hover {
+        background: #6b7280;
+    }
+}
