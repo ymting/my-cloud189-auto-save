@@ -26,6 +26,9 @@ jobs:
       contents: read
       packages: write
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: 从 package.json 读取版本号
         id: pkg_version
         run: |
