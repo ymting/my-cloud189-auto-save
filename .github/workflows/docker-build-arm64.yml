@@ -8,8 +8,13 @@ on:
         description: '输入要构建的镜像版本号'
         required: true
         default: '1.0.0'
-  push:
-    branches: [ "main", "master", "dev" ]
+  workflow_call:
+    inputs:
+      version:
+        description: '输入要构建的镜像版本号'
+        required: false
+        type: string
+        default: ''
 
 env:
   REGISTRY: ghcr.io
@@ -36,7 +41,7 @@ jobs:
       - name: 确定最终构建版本号
         id: final_version
         run: |
-          INPUT_VERSION="${{ github.event.inputs.version }}"
+          INPUT_VERSION="${{ inputs.version }}"
           PKG_VERSION="${{ steps.pkg_version.outputs.version }}"
           FINAL="${INPUT_VERSION:-$PKG_VERSION}"
           echo "version=$FINAL" >> $GITHUB_OUTPUT

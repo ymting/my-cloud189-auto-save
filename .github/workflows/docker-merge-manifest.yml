@@ -1,0 +1,83 @@
+name: Merge Docker Manifests
+
+# 合并多架构 manifest
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '输入要合并的镜像版本号'
+        required: true
+        default: '3.0.1'
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  merge-manifests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: 从 package.json 读取版本号
+        id: pkg_version
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$PKG_VERSION" >> $GITHUB_OUTPUT
+
+      - name: 确定最终版本号
+        id: final_version
+        run: |
+          INPUT_VERSION="${{ inputs.version }}"
+          PKG_VERSION="${{ steps.pkg_version.outputs.version }}"
+          FINAL="${INPUT_VERSION:-$PKG_VERSION}"
+          echo "version=$FINAL" >> $GITHUB_OUTPUT
+          echo "将使用版本号: $FINAL"
+
+      - name: 生成分支镜像标签
+        id: image_tags
+        run: |
+          BRANCH="${GITHUB_REF_NAME}"
+          VERSION="${{ steps.final_version.outputs.version }}"
+          if [ "$BRANCH" = "dev" ]; then
+            echo "version_tag=dev-$VERSION" >> $GITHUB_OUTPUT
+            echo "latest_tag=dev-latest" >> $GITHUB_OUTPUT
+          else
+            echo "version_tag=$VERSION" >> $GITHUB_OUTPUT
+            echo "latest_tag=latest" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Login to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create and push multi-arch manifests
+        run: |
+          VERSION_TAG="${{ steps.image_tags.outputs.version_tag }}"
+          LATEST_TAG="${{ steps.image_tags.outputs.latest_tag }}"
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+
+          echo "=== 合并多架构镜像 ==="
+          echo "版本标签: ${IMAGE}:${VERSION_TAG}"
+          echo "最新标签: ${IMAGE}:${LATEST_TAG}"
+
+          # 创建版本号 manifest
+          docker buildx imagetools create -t ${IMAGE}:${VERSION_TAG} \
+            ${IMAGE}:${VERSION_TAG}-amd64 \
+            ${IMAGE}:${VERSION_TAG}-arm64
+
+          # 创建 latest manifest
+          docker buildx imagetools create -t ${IMAGE}:${LATEST_TAG} \
+            ${IMAGE}:${LATEST_TAG}-amd64 \
+            ${IMAGE}:${LATEST_TAG}-arm64
+
+          echo "=== 合并完成 ==="

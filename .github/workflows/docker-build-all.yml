@@ -1,0 +1,33 @@
+name: Build Docker Images (Full Pipeline)
+
+# 协调工作流：并行构建 amd64 和 arm64，然后合并 manifest
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '输入要构建的镜像版本号'
+        required: false
+        default: ''
+  push:
+    branches: [ "main", "master", "dev" ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # 并行构建两个架构
+  build-amd64:
+    uses: ./.github/workflows/docker-build-amd64.yml
+    secrets: inherit
+
+  build-arm64:
+    uses: ./.github/workflows/docker-build-arm64.yml
+    secrets: inherit
+
+  # 合并 manifest（等待两个构建完成）
+  merge:
+    needs: [build-amd64, build-arm64]
+    uses: ./.github/workflows/docker-merge-manifest.yml
+    with:
+      version: ${{ github.event.inputs.version }}
