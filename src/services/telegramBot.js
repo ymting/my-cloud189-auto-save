@@ -485,7 +485,7 @@ class TelegramBotService {
                         await this.bot.deleteMessage(chatId, messageId);
                         break;
                     case 'fs': // 保存当前目录
-                        await this.saveFolderAsFavorite(chatId, data, messageId);
+                        await this.saveFolderAsFavorite(chatId, parsedData, messageId);
                         break;
                     case 'tr': // 进入TMDB搜索模式
                         await this._startTmdbBind(chatId, parsedData, messageId);
@@ -1010,11 +1010,6 @@ class TelegramBotService {
             // 更新当前 ID
             this.currentFolderId = folderId;
 
-            // 调试日志
-            console.log(`[showFolderTree] folderId: ${folderId}, isReturning: ${isReturning}`);
-            console.log(`[showFolderTree] currentFolderPath before update: ${this.currentFolderPath}`);
-            console.log(`[showFolderTree] folders in map: ${JSON.stringify([...this.folders.keys()])}`);
-
             // 处理路径更新（仅在非返回操作时更新）
             if (!isReturning) {
                 if (folderId === '-11') {
@@ -1023,7 +1018,6 @@ class TelegramBotService {
                 } else {
                     // 从上一次的 folders 中获取当前目录信息
                     const currentFolder = this.folders.get(folderId);
-                    console.log(`[showFolderTree] currentFolder from map: ${JSON.stringify(currentFolder)}`);
                     if (currentFolder && currentFolder.name) {
                         // 正常更新路径
                         if (this.currentFolderPath === '/' || this.currentFolderPath === '') {
@@ -1034,8 +1028,6 @@ class TelegramBotService {
                     }
                 }
             }
-
-            console.log(`[showFolderTree] currentFolderPath after update: ${this.currentFolderPath}`);
 
             // 记录父级 ID（用于返回功能）
             if (folderId !== '-11' && folders.length > 0 && folders[0].pId) {
@@ -1105,11 +1097,6 @@ class TelegramBotService {
     async saveFolderAsFavorite(chatId, data, messageId) {
         try {
             let currentPath = this.currentFolderPath|| '';
-
-            // 调试日志
-            console.log(`[saveFolderAsFavorite] data.f: ${data.f}`);
-            console.log(`[saveFolderAsFavorite] currentFolderPath: ${this.currentFolderPath}`);
-            console.log(`[saveFolderAsFavorite] currentPath: ${currentPath}`);
 
             // 校验目录是否已经是常用目录
             const existingFavorite = await this.commonFolderRepo.findOne({

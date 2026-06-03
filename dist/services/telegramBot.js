@@ -491,7 +491,7 @@ class TelegramBotService {
                         yield this.bot.deleteMessage(chatId, messageId);
                         break;
                     case 'fs': // 保存当前目录
-                        yield this.saveFolderAsFavorite(chatId, data, messageId);
+                        yield this.saveFolderAsFavorite(chatId, parsedData, messageId);
                         break;
                     case 'tr': // 进入TMDB搜索模式
                         yield this._startTmdbBind(chatId, parsedData, messageId);
@@ -999,10 +999,6 @@ class TelegramBotService {
                 const commonFolderIds = new Set(commonFolders.map(f => f.id));
                 // 更新当前 ID
                 this.currentFolderId = folderId;
-                // 调试日志
-                console.log(`[showFolderTree] folderId: ${folderId}, isReturning: ${isReturning}`);
-                console.log(`[showFolderTree] currentFolderPath before update: ${this.currentFolderPath}`);
-                console.log(`[showFolderTree] folders in map: ${JSON.stringify([...this.folders.keys()])}`);
                 // 处理路径更新（仅在非返回操作时更新）
                 if (!isReturning) {
                     if (folderId === '-11') {
@@ -1012,7 +1008,6 @@ class TelegramBotService {
                     else {
                         // 从上一次的 folders 中获取当前目录信息
                         const currentFolder = this.folders.get(folderId);
-                        console.log(`[showFolderTree] currentFolder from map: ${JSON.stringify(currentFolder)}`);
                         if (currentFolder && currentFolder.name) {
                             // 正常更新路径
                             if (this.currentFolderPath === '/' || this.currentFolderPath === '') {
@@ -1024,7 +1019,6 @@ class TelegramBotService {
                         }
                     }
                 }
-                console.log(`[showFolderTree] currentFolderPath after update: ${this.currentFolderPath}`);
                 // 记录父级 ID（用于返回功能）
                 if (folderId !== '-11' && folders.length > 0 && folders[0].pId) {
                     // 当前目录的父级 ID
@@ -1090,10 +1084,6 @@ class TelegramBotService {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 let currentPath = this.currentFolderPath || '';
-                // 调试日志
-                console.log(`[saveFolderAsFavorite] data.f: ${data.f}`);
-                console.log(`[saveFolderAsFavorite] currentFolderPath: ${this.currentFolderPath}`);
-                console.log(`[saveFolderAsFavorite] currentPath: ${currentPath}`);
                 // 校验目录是否已经是常用目录
                 const existingFavorite = yield this.commonFolderRepo.findOne({
                     where: {
