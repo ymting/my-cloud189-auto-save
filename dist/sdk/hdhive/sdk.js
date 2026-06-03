@@ -89,9 +89,10 @@ class HDHiveSDK {
     }
     /**
      * 获取 API 基础地址
+     * 注意：API 路径为 {baseUrl}/api/open/...
      */
     get baseUrl() {
-        return ConfigService.getConfigValue('hdhive.baseUrl') || 'https://api.hdhive.com';
+        return ConfigService.getConfigValue('hdhive.baseUrl') || 'https://hdhive.com';
     }
     /**
      * 构建请求头

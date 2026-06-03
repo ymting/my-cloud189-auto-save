@@ -8,6 +8,7 @@
 
 ## 近期开发记录
 
+- 2026-06-03：**修复天翼云盘每日签到 400 错误** - 签到接口缺少必要参数导致失败。添加 SSO 登录步骤获取 COOKIE_LOGIN_USER cookie、activityId 参数 (ACT_SIGNIN)、正确的请求头 (X-Requested-With, Referer)。参考 [cloud189app-action-simplify](https://github.com/monSteRhhe/cloud189app-action-simplify) 项目实现。
 - 2026-06-02：**HDHive 影巢功能集成开发评估** - 经审查，影巢资源搜索、积分类解锁、防抖防重复扣分、网盘筛选、以及一键转存任务创建闭环逻辑已 100% 全量开发完成，前后端代码、样式表和配置项全部就绪。
 - 2026-06-02：**Git 分支同步操作** - 将 concept 分支全量强制推送到 dev 分支（覆盖模式），dev 分支从 27aa528 更新至 913f932。
 - 2026-06-02：完成 **HDHive（影巢）OpenAPI 集成设计方案**。分析了在系统中集成 HDHive 资源搜索功能的技术可行性。报告文档：`docs/hdhive-openapi-integration-design.md`。

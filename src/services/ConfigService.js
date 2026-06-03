@@ -117,7 +117,7 @@ class ConfigService {
       hdhive: {
         enabled: false,
         apiKey: '',
-        baseUrl: 'https://api.hdhive.com'
+        baseUrl: 'https://hdhive.com'
       },
       customPush: [] // 自定义推送
     };
