@@ -1,0 +1,1 @@
+{"version":3,"sources":["../browser/src/common/NonNever.ts"],"names":[],"mappings":"","file":"NonNever.js","sourcesContent":["/**\r\n * Remove keys with `never` value from object type\r\n * */\r\nexport type NonNever<T extends {}> = Pick<\r\n    T,\r\n    { [K in keyof T]: T[K] extends never ? never : K }[keyof T]\r\n>\r\n"],"sourceRoot":".."}

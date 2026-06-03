@@ -1,0 +1,95 @@
+/* 卡片视图样式 */
+.table-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 10px;
+}
+
+#taskTable,
+#accountTable {
+    display: contents;
+}
+
+#taskTable thead,
+#accountTable thead {
+    display: none;
+}
+
+
+#taskTable tbody,
+#accountTable tbody {
+    display: contents;
+}
+
+#taskTable tr,
+#accountTable tr  {
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+[data-theme="cinema"] #taskTable tr,
+[data-theme="cinema"] #accountTable tr {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(99, 102, 241, 0.12);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3), 0 0 16px rgba(99, 102, 241, 0.06);
+}
+
+#taskTable tr:hover,
+#accountTable tr:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+[data-theme="cinema"] #taskTable tr:hover,
+[data-theme="cinema"] #accountTable tr:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 24px rgba(99, 102, 241, 0.12);
+    border-color: rgba(99, 102, 241, 0.25);
+}
+
+#taskTable td,
+#accountTable td {
+    display: block;
+    padding: 8px 0;
+    border: none;
+    text-align: left;
+}
+
+#taskTable td:not(:last-child),
+#accountTable td:not(:last-child) {
+    border-bottom: 0.5px solid #f0f0f0;
+}
+
+#taskTable td::before,
+#accountTable td::before {
+    content: attr(data-label);
+    font-weight: 500;
+    color: #666;
+    margin-right: 8px;
+}
+
+#taskTable td:first-child,
+#accountTable td:first-child {
+    padding: 12px 0;
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+#taskTable .ellipsis,
+#accountTable.ellipsis {
+    max-width: 100%;
+    white-space: normal;
+    word-break: break-all;
+}
+
+@media screen and (max-width: 768px) {
+    .table-container {
+        grid-template-columns: 1fr;
+    }
+}

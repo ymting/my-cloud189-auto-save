@@ -1,0 +1,154 @@
+.message-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    max-width: calc(100vw - 40px);
+    width: 500px;
+}
+
+.message {
+    padding: 14px 20px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideIn 0.3s ease;
+    word-break: break-word;
+    font-size: 14px;
+    line-height: 1.5;
+    border: 1px solid transparent;
+}
+
+.message::before {
+    content: '';
+    width: 16px;
+    height: 16px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+.message-success {
+    background-color: #f6ffed;
+    border-color: #b7eb8f;
+    color: #52c41a;
+    border-left: 4px solid #52c41a;
+}
+
+.message-success::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2352c41a'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z'/%3E%3C/svg%3E");
+}
+
+.message-error {
+    background-color: #fff2f0;
+    border-color: #ffccc7;
+    color: #ff4d4f;
+}
+
+.message-warning {
+    background-color: #fffbe6;
+    border-color: #ffe58f;
+    color: #faad14;
+}
+
+.message-info {
+    background-color: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.3);
+    color: #6366f1;
+}
+
+.message::before {
+    content: '';
+    width: 16px;
+    height: 16px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+.message-success::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2352c41a'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z'/%3E%3C/svg%3E");
+}
+
+
+.message-error::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff4d4f'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z'/%3E%3C/svg%3E");
+}
+
+
+.message-warning::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23faad14'%3E%3Cpath d='M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z'/%3E%3C/svg%3E");
+}
+
+.message-info::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236366f1'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z'/%3E%3C/svg%3E");
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .message-container {
+        width: auto;
+        left: 20px;
+    }
+
+    .message {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+}
+
+/* 超小屏幕适配 */
+@media screen and (max-width: 375px) {
+    .message-container {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+    }
+
+    .message {
+        padding: 8px 12px;
+        margin-bottom: 8px;
+    }
+}
+
+/* 其他样式保持不变 */
+.message-success {
+    border-left: 4px solid #52c41a;
+}
+
+.message-error {
+    border-left: 4px solid #ff4d4f;
+}
+
+.message-warning {
+    border-left: 4px solid #faad14;
+}
+
+.message-info {
+    border-left: 4px solid #1890ff;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}

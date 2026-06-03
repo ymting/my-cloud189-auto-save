@@ -19,6 +19,7 @@ const TelegramBotManager = require('./utils/TelegramBotManager');
 const fs = require('fs').promises;
 const path = require('path');
 const { setupCloudSaverRoutes, clearCloudSaverToken } = require('./sdk/cloudsaver');
+const { setupHDHiveRoutes, clearHDHiveCache } = require('./sdk/hdhive');
 const { Like, Not, IsNull, In, Or, MoreThan } = require('typeorm');
 const cors = require('cors'); 
 const { EmbyService } = require('./services/emby');
@@ -2088,6 +2089,8 @@ AppDataSource.initialize().then(async () => {
 
     // 初始化cloudsaver
     setupCloudSaverRoutes(app);
+    // 初始化hdhive（影巢）
+    setupHDHiveRoutes(app);
     // 启动服务器
     const port = process.env.PORT || 3000;
     app.listen(port, () => {

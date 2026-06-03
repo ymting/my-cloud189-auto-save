@@ -1,0 +1,1281 @@
+/* macOS风格CSS - 参考苹果设计语言 */
+
+/* macOS风格变量 */
+:root {
+    --primary-rgb: 0, 113, 227;  /* #0071e3 的 RGB 值 - macOS蓝色 */
+    --bg-color: #f5f7fa;
+    --background-color: #f5f7fa;
+    --hover-color: #f0f0f3;
+    --text-color: #333333;
+    --border-color: #e2e2e2;
+    --hover-bg: #f0f0f3;
+    --card-bg: #ffffff;
+    --container-bg: #ffffff;
+    --input-bg: #ffffff;
+    --input-border: #d2d2d7;
+    --btn-bg: #0071e3;
+    --btn-text: #ffffff;
+    --btn-warning-bg: #ff9500;
+    --shadow-color: rgba(0, 0, 0, 0.08);
+    --link-color: #0071e3;
+    --thead-bg: rgba(0, 0, 0, 0.02);
+    --theme-color: #0071e3;
+    --selected-bg: rgba(var(--primary-rgb), 0.1);
+    --card-radius: 10px;
+    --btn-radius: 6px;
+    --input-radius: 6px;
+}
+
+[data-theme="cinema"] {
+    --primary-rgb: 10, 132, 255;  /* #0a84ff 的 RGB 值 - macOS暗色模式蓝色 */
+    --bg-color: #1e1e1e;
+    --background-color: #1e1e1e;
+    --hover-color: #2a2a2a;
+    --text-color: #ffffff;  /* 提高主要文本对比度，从 #f5f5f7 改为 #ffffff */
+    --text-secondary: #b8b8b8;  /* 添加次要文本颜色，提高对比度 */
+    --border-color: #3d3d3d;
+    --hover-bg: #2a2a2a;
+    --card-bg: #2a2a2a;
+    --container-bg: #2a2a2a;
+    --input-bg: #1e1e1e;
+    --input-border: #3d3d3d;
+    --btn-bg: #0a84ff;
+    --btn-text: #ffffff;
+    --btn-warning-bg: #ff9f0a;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --link-color: #4da3ff;  /* 提高链接颜色对比度，从 #0a84ff 改为 #4da3ff */
+    --thead-bg: #1d1d1d;
+    --theme-color: #0a84ff;
+    --selected-bg: rgba(var(--primary-rgb), 0.2);
+}
+
+/* 增强暗色模式下表格文本对比度 */
+[data-theme="cinema"] #taskTable tr,
+[data-theme="cinema"] #accountTable tr {
+    background-color: #2d2d2d; /* 稍微提亮背景色 */
+}
+
+/* 增强暗色模式下链接对比度 */
+[data-theme="cinema"] a {
+    color: var(--link-color);
+    font-weight: 500; /* 稍微加粗 */
+}
+
+/* 强调文本样式 */
+.highlight, 
+.emphasis,
+strong, 
+b {
+    font-weight: 600;
+}
+
+/* 暗色模式下的强调文本 */
+[data-theme="cinema"] .highlight, 
+[data-theme="cinema"] .emphasis,
+[data-theme="cinema"] strong, 
+[data-theme="cinema"] b {
+    color: #ffffff; /* 确保强调文本在暗色模式下足够明显 */
+}
+
+
+:root {
+  /* 颜色变量 - macOS风格 */
+  --macos-bg: #f5f7fa;
+  --macos-container-bg: #ffffff;
+  --macos-text: #333333;
+  --macos-text-secondary: #666666;
+  --macos-border: #e2e2e2;
+  --macos-primary: #0071e3;
+  --macos-primary-hover: #0077ed;
+  --macos-danger: #ff3b30;
+  --macos-warning: #ff9500;
+  --macos-success: #34c759;
+  --macos-shadow: rgba(0, 0, 0, 0.08);
+  --macos-card-radius: 10px;
+  --macos-btn-radius: 6px;
+  --macos-input-radius: 6px;
+}
+
+/* 暗黑模式变量 */
+[data-theme="cinema"] {
+  --macos-bg: #1e1e1e;
+  --macos-container-bg: #2a2a2a;
+  --macos-text: #ffffff; /* 提高主要文本对比度 */
+  --macos-text-secondary: #b8b8b8; /* 提高次要文本对比度 */
+  --macos-border: #4d4d4d; /* 提高边框对比度 */
+  --macos-primary: #0a84ff;
+  --macos-primary-hover: #409cff;
+  --macos-danger: #ff453a;
+  --macos-warning: #ff9f0a;
+  --macos-success: #30d158;
+  --macos-shadow: rgba(0, 0, 0, 0.3);
+}
+
+.folder-select-header input[type="checkbox"], .folder-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+}
+
+/* 基础样式覆盖 */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background-color: var(--macos-bg);
+  color: var(--macos-text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+  background-color: var(--macos-container-bg);
+  border-radius: var(--macos-card-radius);
+  box-shadow: 0 2px 12px var(--macos-shadow);
+  transition: background-color 0.3s, box-shadow 0.3s;
+  /* overflow: hidden; */
+}
+
+.operation-group {
+    margin-bottom: 10px;
+}
+
+/* 标题区域 */
+.header {
+  /* padding: 16px 0; */
+  margin-bottom: 20px;
+}
+
+.header h1 {
+  font-weight: 500;
+  letter-spacing: -0.5px;
+  color: var(--macos-text);
+}
+
+/* 按钮样式 */
+button, 
+.btn-primary, 
+.btn-default, 
+.btn-warning, 
+.btn-danger {
+  font-weight: 500;
+  border-radius: var(--macos-btn-radius);
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px var(--macos-shadow);
+  border: none;
+  height: 36px; /* 与输入框高度一致 */
+  padding: 0 16px;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.2;
+  box-sizing: border-box;
+}
+
+.btn-primary {
+  background: #4B4BFA;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #3B3BEA;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(75, 75, 250, 0.4);
+}
+
+.btn-default {
+  background: rgba(142, 142, 147, 0.12);
+  color: var(--macos-text);
+  border: 1px solid transparent;
+}
+
+.btn-default:hover {
+  background: rgba(142, 142, 147, 0.18);
+  color: var(--macos-text);
+  transform: translateY(-1px);
+}
+
+.btn-warning {
+  background: var(--macos-warning);
+  color: white;
+}
+
+.btn-danger {
+  background: var(--macos-danger);
+  color: white;
+}
+
+/* 禁用状态 */
+button:disabled,
+.btn-primary:disabled,
+.btn-default:disabled,
+.btn-warning:disabled,
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* 按钮尺寸变体 */
+.btn-small {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+/* 输入框与按钮组合 */
+.input-group {
+  display: flex;
+  align-items: stretch;
+}
+
+.input-group input,
+.input-group select {
+  flex: 1;
+  border-radius: var(--macos-input-radius) 0 0 var(--macos-input-radius);
+  border-right: none;
+}
+
+.input-group button,
+.input-group .btn-primary,
+.input-group .btn-default {
+  border-radius: 0 var(--macos-btn-radius) var(--macos-btn-radius) 0;
+}
+
+/* 表单元素 - macOS风格 */
+input, select, textarea {
+  border-radius: var(--macos-input-radius);
+  border: 1px solid var(--macos-border);
+  padding: 10px 12px;
+  background-color: var(--macos-container-bg);
+  color: var(--macos-text);
+  transition: all 0.2s ease;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 基础输入框样式 */
+input, select, textarea {
+  height: 36px;
+  padding: 0 12px;
+  font-size: 14px;
+  border: 1px solid var(--macos-border);
+  border-radius: var(--macos-input-radius);
+  background-color: var(--macos-container-bg);
+  color: var(--macos-text);
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+/* 文本域特殊处理 */
+textarea {
+  height: auto;
+  min-height: 36px;
+  padding: 8px 12px;
+  resize: vertical;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--macos-primary);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15);
+}
+
+input:hover, select:hover, textarea:hover {
+  border-color: rgba(var(--primary-rgb), 0.5);
+}
+
+/* 禁用状态 */
+input:disabled, 
+select:disabled, 
+textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: rgba(142, 142, 147, 0.1);
+}
+
+/* 占位符文本样式 */
+::placeholder {
+  color: rgba(142, 142, 147, 0.6);
+  opacity: 1;
+}
+
+/* 自动填充样式 */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px var(--macos-container-bg) inset;
+  -webkit-text-fill-color: var(--macos-text);
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* 选择文本样式 */
+::selection {
+  background-color: rgba(var(--primary-rgb), 0.2);
+  color: var(--macos-text);
+}
+
+/* 输入框错误状态 */
+input.error, select.error, textarea.error {
+  border-color: var(--macos-danger);
+}
+
+input.error:focus, select.error:focus, textarea.error:focus {
+  box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.15);
+}
+
+/* 输入框成功状态 */
+input.success, select.success, textarea.success {
+  border-color: var(--macos-success);
+}
+
+input.success:focus, select.success:focus, textarea.success:focus {
+  box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.15);
+}
+
+/* 输入框只读状态 */
+input[readonly], select[readonly], textarea[readonly] {
+  background-color: rgba(142, 142, 147, 0.05);
+  cursor: default;
+}
+
+/* 表单组件样式 */
+.form-group {
+  margin-bottom: 16px;
+}
+
+label {
+  display: block;
+  font-weight: 500;
+  color: var(--macos-text-secondary);
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+/* 内联表单元素 */
+.form-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 表单操作区域 */
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  justify-content: flex-end;
+}
+
+/* 表格样式 - macOS风格 */
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 20px;
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    box-shadow: 0 1px 4px var(--shadow-color);
+}
+
+th, td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+th {
+    font-weight: 500;
+    color: var(--text-secondary);
+    background-color: rgba(142, 142, 147, 0.08);
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover {
+    background-color: rgba(142, 142, 147, 0.05);
+}
+
+.table-container {
+    overflow-x: auto;
+    margin-bottom: 20px;
+    border-radius: var(--card-radius);
+    /* background-color: var(--container-bg); */
+    /* box-shadow: 0 2px 12px var(--shadow-color); */
+    padding: 16px;
+    /* border: 1px solid var(--border-color); */
+    transition: all 0.3s ease;
+}
+
+/* 添加表格行动画效果 */
+tbody tr {
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+tbody tr:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px var(--shadow-color);
+    z-index: 1;
+    position: relative;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    th, td {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+}
+
+/* 状态标签样式 */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.status-pending { background-color: #e6f7ff; color: #1890ff; }
+.status-processing { background-color: #fff7e6; color: #fa8c16; }
+.status-completed { background-color: #f6ffed; color: #52c41a; }
+.status-failed { background-color: #fff1f0; color: #f5222d; }
+
+/* 文本省略样式 */
+.ellipsis {
+    max-width: 150px;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+a:visited {
+    color: #1890ff; 
+}
+
+.delete-cloud-options {
+    display: flex;
+    align-items: center;
+    margin-left: 8px;
+    min-width: 200px;
+    /* margin-top: 12px; */
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.checkbox-label, .delete-cloud-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    min-width: fit-content;
+}
+
+.checkbox-label input[type="checkbox"],
+.delete-cloud-option input[type="checkbox"] {
+    margin: 0;
+}
+
+/* 表格样式 */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  border-radius: var(--macos-card-radius);
+  overflow: hidden;
+  box-shadow: 0 1px 4px var(--macos-shadow);
+}
+
+thead th {
+  background-color: rgba(142, 142, 147, 0.08);
+  font-weight: 500;
+  text-align: left;
+  padding: 12px 16px;
+  color: var(--macos-text-secondary);
+  border-bottom: 1px solid var(--macos-border);
+}
+
+tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--macos-border);
+  color: var(--macos-text);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover {
+  background-color: rgba(142, 142, 147, 0.05);
+}
+
+/* 标签页样式 - macOS风格 */
+.tabs {
+    display: flex;
+    background-color: rgba(142, 142, 147, 0.08);
+    border-radius: var(--card-radius);
+    padding: 6px;
+    margin-bottom: 20px;
+    border-bottom: none;
+}
+
+.tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: var(--btn-radius);
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+    margin: 0 4px;
+    text-align: center;
+    border-bottom:0;
+}
+
+.tab:hover {
+    background-color: rgba(142, 142, 147, 0.12);
+    color: var(--text-color);
+}
+
+.tab.active {
+    border-bottom-color:transparent;
+    background-color: var(--card-bg);
+    color: var(--theme-color);
+    box-shadow: 0 1px 3px var(--shadow-color);
+}
+
+.tab-content {
+    display: none;
+    padding: 16px 0;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+        padding: 4px;
+    }
+    
+    .tab {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+}
+/* 标签页样式 */
+.tabs {
+  display: flex;
+  background-color: rgba(142, 142, 147, 0.08);
+  border-radius: var(--macos-card-radius);
+  padding: 4px;
+  margin-bottom: 20px;
+}
+
+.tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: var(--macos-btn-radius);
+  font-weight: 500;
+  color: var(--macos-text-secondary);
+  transition: all 0.2s ease;
+  margin: 0 4px;
+}
+
+.tab:hover {
+  background-color: rgba(142, 142, 147, 0.12);
+  color: var(--macos-text);
+}
+
+.tab.active {
+  background-color: var(--macos-container-bg);
+  color: var(--macos-primary);
+  box-shadow: 0 1px 3px var(--macos-shadow);
+}
+
+/* 模态框 - macOS风格 */
+.modal-content {
+  border-radius: var(--macos-card-radius);
+  box-shadow: 0 10px 25px var(--macos-shadow);
+  border: 1px solid var(--macos-border);
+  background-color: var(--macos-container-bg);
+  animation: modalFadeIn 0.2s ease-out;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.modal-content h3 {
+  font-weight: 500;
+  color: var(--macos-text);
+  margin-top: 0;
+  /* padding: 18px; */
+  /* border-bottom: 1px solid var(--macos-border); */
+  margin: 0;
+}
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--macos-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  font-weight: 500;
+  font-size: 16px;
+  color: var(--macos-text);
+}
+
+.modal-close {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #ff5f57;
+  border: none;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  opacity: 0.8;
+}
+
+.modal-close:before, .modal-close:after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 2px;
+  background-color: rgba(0, 0, 0, 0.5);
+  top: 50%;
+  left: 50%;
+  display: none;
+}
+
+.modal-close:hover:before, .modal-close:hover:after {
+  display: block;
+}
+
+.modal-close:before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.modal-close:after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--macos-border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* 弹出窗口动画 */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 模态框背景遮罩 */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  animation: backdropFadeIn 0.2s ease-out;
+  z-index: 1000;
+}
+
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 主题切换按钮 */
+.theme-toggle-btn {
+  background-color: rgba(142, 142, 147, 0.12);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.theme-toggle-btn:hover {
+  background-color: rgba(142, 142, 147, 0.18);
+}
+
+.theme-dropdown {
+  border-radius: var(--macos-card-radius);
+  box-shadow: 0 4px 20px var(--macos-shadow);
+  border: 1px solid var(--macos-border);
+  overflow: hidden;
+}
+
+/* 下拉菜单和选择器 - macOS风格 */
+.dropdown-menu {
+  border-radius: var(--macos-card-radius);
+  background-color: var(--macos-container-bg);
+  box-shadow: 0 4px 20px var(--macos-shadow);
+  border: 1px solid var(--macos-border);
+  overflow: hidden;
+  animation: dropdownFadeIn 0.15s ease-out;
+  min-width: 180px;
+  padding: 6px 0;
+  z-index: 1000;
+}
+
+.dropdown-item {
+  padding: 8px 16px;
+  color: var(--macos-text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dropdown-item:hover {
+  background-color: rgba(142, 142, 147, 0.12);
+}
+
+.dropdown-item.active {
+  background-color: var(--macos-primary);
+  color: white;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: var(--macos-border);
+  margin: 6px 0;
+}
+
+/* 下拉菜单动画 */
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 选择器样式 */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8.825L1.175 4 2.05 3.125 6 7.075 9.95 3.125 10.825 4z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+select:focus {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%230071e3' d='M6 8.825L1.175 4 2.05 3.125 6 7.075 9.95 3.125 10.825 4z'/%3E%3C/svg%3E");
+}
+
+/* 多选选择器 */
+select[multiple] {
+  background-image: none;
+  padding-right: 12px;
+  height: auto;
+}
+
+/* 自定义选择器 */
+.custom-select {
+  position: relative;
+  display: inline-block;
+}
+
+.custom-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border: 1px solid var(--macos-border);
+  border-radius: var(--macos-input-radius);
+  background-color: var(--macos-container-bg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 180px;
+}
+
+.custom-select-trigger:hover {
+  border-color: var(--macos-primary);
+}
+
+.custom-select-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  border-radius: var(--macos-card-radius);
+  background-color: var(--macos-container-bg);
+  box-shadow: 0 4px 20px var(--macos-shadow);
+  border: 1px solid var(--macos-border);
+  overflow: hidden;
+  z-index: 1000;
+  animation: dropdownFadeIn 0.15s ease-out;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.theme-option {
+  padding: 10px 16px;
+  transition: background-color 0.2s;
+}
+
+.theme-option:hover {
+  background-color: rgba(142, 142, 147, 0.12);
+}
+
+/* 卡片视图 */
+.card {
+  background-color: var(--macos-container-bg);
+  border-radius: var(--macos-card-radius);
+  box-shadow: 0 2px 8px var(--macos-shadow);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--macos-shadow);
+}
+
+/* 搜索栏 */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px; /* 统一高度 */
+}
+
+.search-input {
+  display: flex;
+  align-items: center;
+  background-color: rgba(142, 142, 147, 0.08);
+  border-radius: var(--macos-input-radius);
+  padding: 4px 8px;
+  border: 1px solid var(--macos-border);
+  height: 100%; /* 继承父元素高度 */
+  box-sizing: border-box;
+}
+
+.search-input input {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  flex: 1;
+  min-width: 200px;
+  height: 100%; /* 继承父元素高度 */
+  padding: 0 8px;
+}
+
+/* 下拉菜单样式 */
+.filter-dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 100%; /* 继承父元素高度 */
+}
+
+.filter-dropdown select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--macos-container-bg);
+  border: 1px solid var(--macos-border);
+  border-radius: var(--macos-input-radius);
+  padding: 0 32px 0 12px;
+  font-size: 14px;
+  cursor: pointer;
+  min-width: 140px;
+  height: 100%; /* 继承父元素高度 */
+  box-sizing: border-box;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8.825L1.175 4 2.05 3.125 6 7.075 9.95 3.125 10.825 4z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.filter-dropdown select:focus {
+  outline: none;
+  border-color: var(--macos-primary);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15);
+}
+
+.filter-dropdown::before {
+  content: "";
+  position: absolute;
+  left: -40px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: var(--macos-text-secondary);
+}
+
+.search-input button {
+  background: transparent;
+  box-shadow: none;
+  padding: 6px;
+  border-radius: 50%;
+}
+
+.search-input button:hover {
+  background-color: rgba(142, 142, 147, 0.12);
+}
+
+/* Checkbox和单选按钮样式 - macOS风格 */
+input[type="checkbox"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 20px!important;
+  height: 20px!important;
+  border: 1px solid var(--macos-border);
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  vertical-align: middle;
+  margin-right: 8px;
+  background-color: var(--macos-container-bg);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+input[type="checkbox"]:checked {
+  background-color: var(--macos-primary);
+  border-color: var(--macos-primary);
+}
+
+input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  width: 6px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  left: 50%;
+  top: 45%;
+  margin-left: -5px;
+  margin-top: -6px;
+}
+
+input[type="checkbox"]:hover {
+  border-color: var(--macos-primary);
+}
+
+input[type="checkbox"]:focus {
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15);
+}
+
+input[type="radio"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--macos-border);
+  border-radius: 50%;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  vertical-align: middle;
+  margin-right: 8px;
+  background-color: var(--macos-container-bg);
+  transition: all 0.2s ease;
+}
+
+input[type="radio"]:checked {
+  border-color: var(--macos-primary);
+  border-width: 5px;
+  background-color: white;
+}
+
+input[type="radio"]:hover {
+  border-color: var(--macos-primary);
+}
+
+input[type="radio"]:focus {
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15);
+}
+
+/* 开关样式 - macOS风格 */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(142, 142, 147, 0.3);
+  transition: .3s;
+  border-radius: 22px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--macos-primary);
+}
+
+input:focus + .toggle-slider {
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(18px);
+}
+
+/* 移动端适配 - macOS风格 */
+@media (max-width: 768px) {
+    .operation-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .button-group, .search-bar {
+        width: 100%;
+    }
+    
+    .search-input {
+        width: 100%;
+        background-color: rgba(142, 142, 147, 0.12);
+        border-radius: var(--btn-radius);
+        padding: 4px 8px;
+    }
+    
+    .search-input select, 
+    .search-input input {
+        flex: 1;
+        background: transparent;
+        border: none;
+    }
+}
+
+
+.delete-cloud-option {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 5px;
+    margin-right: 10px;
+    margin-bottom: 0;
+}
+
+.delete-cloud-option input[type="checkbox"] {
+    margin: 0;
+    width: unset;
+}
+
+.delete-cloud-option span {
+    /* line-height: normal; */
+}
+
+/* 消息提示和通知样式 - macOS风格 */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1050;
+  max-width: 350px;
+}
+
+.toast {
+  background-color: var(--macos-container-bg);
+  border-radius: var(--macos-card-radius);
+  box-shadow: var(--macos-shadow-lg);
+  border: 1px solid var(--macos-border);
+  margin-bottom: 10px;
+  overflow: hidden;
+  animation: toastFadeIn 0.3s ease-out;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.toast-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--macos-border);
+}
+
+.toast-body {
+  padding: 12px 16px;
+  color: var(--macos-text);
+}
+
+.toast-title {
+  font-weight: 500;
+  margin-right: auto;
+  color: var(--macos-text);
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--macos-text-secondary);
+  opacity: 0.7;
+}
+
+.toast-close:hover {
+  opacity: 1;
+}
+
+/* 通知类型样式 */
+.toast-success {
+  border-left: 4px solid #34c759;
+}
+
+.toast-error {
+  border-left: 4px solid #ff3b30;
+}
+
+.toast-warning {
+  border-left: 4px solid #ff9500;
+}
+
+.toast-info {
+  border-left: 4px solid #007aff;
+}
+
+/* 通知动画 */
+@keyframes toastFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toastFadeOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+}
+
+.toast.hide {
+  animation: toastFadeOut 0.3s ease-out forwards;
+}
+
+.logs-modal .modal-header {
+    padding: 16px 20px;
+}
+
+.toggle-help-text{
+  box-shadow: none;
+}
+.default-star {
+  display: flex;
+  align-items: center;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  body {
+    padding: 12px;
+  }
+  
+  .container {
+    padding: 16px;
+  }
+  
+  .tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 2px;
+  }
+  
+  .tab {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  
+  .toast-container {
+    left: 20px;
+    right: 20px;
+    max-width: none;
+  }
+}

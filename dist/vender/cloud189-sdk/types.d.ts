@@ -1,0 +1,562 @@
+import { Store } from './store';
+/**
+ * 账户家庭信息
+ * @public
+ */
+export interface FamilyListResponse {
+    familyInfoResp: [
+        {
+            /**
+             * 家庭id
+             */
+            familyId: string;
+            /**
+             * 家庭名称
+             */
+            remarkName: string;
+            /**
+             * 类型
+             */
+            type: number;
+            /**
+             * 用户角色 如果是1 表明当前账户是该账户的主家庭 否则当前账户是其他家庭的成员账户
+             */
+            userRole: number;
+        }
+    ];
+}
+/**
+ * accessToken 结果
+ * @public
+ */
+export interface AccessTokenResponse {
+    /**
+     * accessToken
+     */
+    accessToken: string;
+    /**
+     * accessToken 的有效期 单位秒
+     */
+    expiresIn: number;
+}
+/**
+ * 家庭签到任务结果
+ * @public
+ */
+export interface FamilyUserSignResponse {
+    /**
+     * 签到的奖励容量 单位MB
+     */
+    bonusSpace: number;
+    /**
+     * 签到的家庭id
+     */
+    signFamilyId: number;
+    /**
+     * 签到的状态
+     */
+    signStatus: number;
+    /**
+     * 签到的时间
+     */
+    signTime: string;
+    /**
+     * 签到的用户
+     */
+    userId: string;
+}
+/**
+ * 文件类型
+ * @public
+ */
+export declare enum MediaType {
+    ALL = 0,
+    IMAGE = 1,
+    MUSIC = 2,
+    VIDEO = 3,
+    TXT = 4
+}
+/**
+ * 排序类型
+ * @public
+ */
+export declare enum OrderByType {
+    NAME = 1,
+    SIZE = 2,
+    LAST_OP_TIME = 3
+}
+/**
+ * 分页参数
+ * @public
+ */
+export interface PageQuery {
+    /**
+     * 分页大小 默认60
+     */
+    pageSize?: number;
+    /**
+     * 页码 默认1
+     */
+    pageNum?: number;
+    /**
+     * 文件类型
+     * 0 全部 1 图片 2 视频 3 文档
+     */
+    mediaType?: MediaType;
+    /**
+     * 文件夹Id
+     */
+    folderId?: string;
+    /**
+     * 未知参数 5
+     */
+    iconOption?: number;
+    /**
+     * 排序类型
+     * 1 文件名称 2 文件大小 3 文件修改时间
+     */
+    orderBy?: OrderByType;
+    /**
+     * 是否倒序
+     */
+    descending?: boolean;
+}
+/**
+ * 文件列表API响应数据结构
+ * @public
+ */
+export interface FileListResponse {
+    /** 文件列表数据对象 */
+    fileListAO: FileListAO;
+    /**
+     * 最后修订版本号
+     * 用于增量同步的时间戳或版本标识
+     */
+    lastRev: number;
+}
+/**
+ * 文件列表数据对象
+ * @public
+ */
+export interface FileListAO {
+    /** 文件总数 */
+    count: number;
+    /** 文件项列表 */
+    fileList: FileItem[];
+    /** 文件夹项列表 */
+    folderList: FolderItem[];
+}
+/**
+ * 文件项详细信息
+ * @public
+ */
+export interface FileItem {
+    /** 文件创建时间，格式：YYYY-MM-DD HH:mm:ss */
+    createDate: string;
+    /**
+     * 收藏标签
+     * 0-未收藏 | 1-已收藏
+     */
+    favoriteLabel: number;
+    /** 文件图标信息 */
+    icon: {
+        /** 大尺寸图标URL */
+        largeUrl: string;
+        /** 小尺寸图标URL */
+        smallUrl: string;
+    };
+    /** 文件唯一标识ID */
+    id: string;
+    /** 最后操作时间，格式：YYYY-MM-DD HH:mm:ss */
+    lastOpTime: string;
+    /** 文件MD5哈希值，用于文件校验 */
+    md5: string;
+    /**
+     * 媒体类型
+     * 1-图片 | 2-视频 | 3-音频 | 4-文档
+     */
+    mediaType: number;
+    /** 文件名 */
+    name: string;
+    /**
+     * 图片方向
+     * 0-正常 | 1-90° | 2-180° | 3-270°
+     */
+    orientation: number;
+    /** 父目录ID */
+    parentId: string;
+    /** 文件版本标识，格式：YYYYMMDDHHmmss */
+    rev: string;
+    /** 文件大小（字节） */
+    size: number;
+    /**
+     * 星标标签
+     * 1-普通 | 2-标星
+     */
+    starLabel: number;
+}
+/**
+ * 文件夹项详细信息
+ * @public
+ */
+export interface FolderItem {
+    /** 文件夹创建时间，格式：YYYY-MM-DD HH:mm:ss */
+    createDate: string;
+    /** 文件夹内文件数量 */
+    fileCount: number;
+    /** 文件夹唯一标识ID */
+    id: string;
+    /** 最后操作时间，格式：YYYY-MM-DD HH:mm:ss */
+    lastOpTime: string;
+    /** 文件夹名称 */
+    name: string;
+    /** 父目录ID */
+    parentId: string;
+    /** 文件夹版本标识，格式：YYYYMMDDHHmmss */
+    rev: string;
+    /**
+     * 星标标签
+     * 1-普通 | 2-标星
+     */
+    starLabel: number;
+}
+/**
+ * 家庭请求
+ * @public
+ */
+export interface FamilyRequest {
+    familyId: string;
+}
+/**
+ * 创建个人文件夹
+ * @public
+ */
+export interface CreateFolderRequest {
+    parentFolderId: string;
+    folderName: string;
+}
+/**
+ * 创建家庭文件夹
+ * @public
+ */
+export interface CreateFamilyFolderRequest extends FamilyRequest, CreateFolderRequest {
+}
+/**
+ * 创建个人文件夹
+ * @public
+ */
+export interface RenameFolderRequest {
+    folderId: string;
+    folderName: string;
+}
+/**
+ * 创建家庭文件夹
+ * @public
+ */
+export interface RenameFamilyFolderRequest extends FamilyRequest, RenameFolderRequest {
+}
+/**
+ * RsaKey响应
+ * @public
+ */
+export interface RsaKeyResponse extends RsaKey {
+    res_code: number;
+    res_message: string;
+}
+/**
+ * 初始化个人上传请求
+ * @public
+ */
+export interface initMultiUploadRequest {
+    parentFolderId: string;
+    fileName: string;
+    fileSize: number;
+    sliceSize: number;
+    fileMd5?: string;
+    sliceMd5?: string;
+}
+/**
+ * 初始化家庭上传请求
+ * @public
+ */
+export interface initMultiFamilyUploadRequest extends FamilyRequest, initMultiUploadRequest {
+}
+/**
+ * 提交个人上传请求
+ * @public
+ */
+export interface CommitMultiUploadRequest {
+    fileMd5: string;
+    sliceMd5: string;
+    uploadFileId: string;
+    lazyCheck?: number;
+}
+/**
+ * 提交家庭上传请求
+ * @public
+ */
+export interface CommitMultiFamilyUploadRequest extends FamilyRequest, CommitMultiUploadRequest {
+}
+/**
+ * 容量信息
+ * @public
+ */
+export interface CapacityInfo {
+    /**
+     * 总空间 单位KB
+     */
+    totalSize: number;
+    /**
+     * 已使用空间 单位KB
+     */
+    usedSize: number;
+    /**
+     * 剩余空间 单位KB
+     */
+    freeSize: number;
+}
+/**
+ * 账户容量信息
+ * @public
+ */
+export interface UserSizeInfoResponse {
+    /**
+     * 个人容量信息
+     */
+    cloudCapacityInfo: CapacityInfo;
+    /**
+     * 家庭容量信息
+     */
+    familyCapacityInfo: CapacityInfo;
+}
+/**
+ * 个人签到结果
+ * @public
+ */
+export interface UserSignResponse {
+    /**
+     * 是否已经签到过
+     */
+    isSign: boolean;
+    /**
+     * 签到获取的容量奖励 单位MB
+     */
+    netdiskBonus: number;
+}
+/**
+ * 个人任务执行结果
+ * @public
+ */
+export interface UserTaskResponse {
+    /**
+     * 错误码
+     */
+    errorCode: string;
+    /**
+     * 奖励容量 单位MB
+     */
+    prizeName: string;
+}
+/**
+ * @public
+ */
+export interface CacheQuery {
+    captchaToken: string;
+    reqId: string;
+    lt: string;
+    paramId: string;
+    publicKey?: string;
+    preKey?: string;
+    rsaUserName?: string;
+    rsaPassword?: string;
+}
+/**
+ * QR code data returned by getQRCode, used for polling status
+ * @public
+ */
+export interface QRCodeData {
+    uuid: string;
+    encryuuid: string;
+    reqId: string;
+    lt: string;
+    paramId: string;
+}
+/**
+ * QR code scan status enum
+ * @public
+ */
+export declare enum QRCodeStatus {
+    /** Login success */
+    SUCCESS = 0,
+    /** Waiting for user to scan */
+    WAITING = -106,
+    /** User scanned, waiting for confirmation on device */
+    SCANNED = -11002,
+    /** QR code expired */
+    EXPIRED = -11001
+}
+/**
+ * QR code status check response
+ * @public
+ */
+export interface QRCodeStatusResponse {
+    status: QRCodeStatus | number;
+    redirectUrl?: string;
+}
+/**
+ * QR code login options
+ * @public
+ */
+export interface QRLoginOptions {
+    /** Polling interval in ms, default 3000 */
+    pollInterval?: number;
+    /** Timeout in ms, default 120000 */
+    timeout?: number;
+}
+/**
+ * 客户端初始化参数
+ * @public
+ */
+export interface ConfigurationOptions {
+    /** Login username */
+    username?: string;
+    /** Login password */
+    password?: string;
+    /** Token store */
+    token?: Store;
+    ssonCookie?: string;
+    proxyUrl?: string;
+    /** Callback invoked with QR code URL when ready for scanning */
+    onQRCodeReady?: (qrUrl: string) => void;
+    /** QR code login options */
+    qrLoginOptions?: QRLoginOptions;
+}
+/**
+ * @public
+ * accessToken 有效期7天，可以通过refreshToken取新的accessToken
+ */
+export interface TokenSession {
+    res_code: number;
+    res_message: string;
+    accessToken: string;
+    familySessionKey: string;
+    familySessionSecret: string;
+    refreshToken: string;
+    loginName: string;
+    sessionKey: string;
+}
+/**
+ * @public
+ */
+export interface RefreshTokenSession {
+    expiresIn: number;
+    accessToken: string;
+    refreshToken: string;
+}
+/**
+ * @public
+ */
+export interface ClientSession {
+    accessToken: string;
+    sessionKey: string;
+}
+/**
+ * @public
+ */
+export interface RsaKey {
+    expire: number;
+    pkId: string;
+    pubKey: string;
+    ver: string;
+}
+/**
+ * @public
+ */
+export interface UploadResponse {
+    code: string;
+}
+/**
+ * @public
+ */
+export interface UploadInitResponse extends UploadResponse {
+    data: {
+        uploadType: number;
+        uploadHost: string;
+        uploadFileId: string;
+        fileDataExists: number;
+    };
+}
+/**
+ * @public
+ */
+export interface UploadCommitResponse extends UploadResponse {
+    file: {
+        userFileId: string;
+        fileName: string;
+        fileSize: number;
+        fileMd5: string;
+        createDate: string;
+        rev: number;
+        userId: number;
+    };
+    /**
+     * 是否快传
+     */
+    fileDataExists: number;
+}
+/**
+ * @public
+ */
+export interface UploadPartsInfoResponse extends UploadResponse {
+    data: {
+        uploadFileId: string;
+        uploadedPartList: string;
+    };
+}
+/**
+ * @public
+ */
+export type PartNumberKey = `partNumber_${number}`;
+/**
+ * @public
+ */
+export interface MultiUploadUrlsResponse extends UploadResponse {
+    uploadUrls: {
+        [key: PartNumberKey]: {
+            requestURL: string;
+            requestHeader: string;
+        };
+    };
+}
+/**
+ * @public
+ */
+export interface UploadCallbacks {
+    onProgress?: (progress: number) => void;
+    onComplete?: (response: any) => void;
+    onError?: (error: Error) => void;
+}
+/**
+ * @public
+ */
+export type TaskType = 'DELETE' | 'MOVE' | 'COPY';
+/**
+ * @public
+ */
+export interface CreateBatchTaskRequest {
+    type: TaskType;
+    taskInfos: [
+        {
+            fileId: string;
+            fileName?: string;
+            isFolder: number;
+            srcParentId?: string;
+        }
+    ];
+    targetFolderId?: string;
+}
+/**
+ * @public
+ */
+export interface CreateFamilyBatchTaskRequest extends FamilyRequest, CreateBatchTaskRequest {
+}

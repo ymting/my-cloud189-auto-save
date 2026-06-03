@@ -1,0 +1,283 @@
+/* 主题切换按钮样式 */
+.theme-switch {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.theme-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    color: var(--text-color);
+}
+
+
+.theme-dropdown {
+    display: none;
+    position: fixed !important;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    /* 主题菜单是全局悬浮层，需要压过媒体墙任务卡片的 transform/backdrop-filter 堆叠层。 */
+    z-index: 10000 !important;
+    min-width: 160px;
+    overflow: hidden;
+    padding: 8px 0;
+}
+
+.theme-dropdown.show {
+    display: block;
+}
+
+.theme-option {
+    padding: 10px 16px;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.theme-option:hover {
+    background: var(--hover-bg);
+}
+
+.theme-option i {
+    font-size: 16px;
+}
+
+/* 影院模式下拉菜单样式 */
+[data-theme="cinema"] .theme-dropdown {
+    background: rgba(30, 41, 59, 0.98);
+    border-color: rgba(99, 102, 241, 0.2);
+}
+
+/* 明亮模式变量 */
+:root {
+    --primary-rgb: 64, 158, 255;
+    --bg-color: #ffffff;
+    --background-color: #ffffff;
+    --hover-color: #f5f5f5;
+    --text-color: rgba(0, 0, 0, 0.85);
+    --border-color: #e0e0e0;
+    --hover-bg: #f5f5f5;
+    --card-bg: #ffffff;
+    --container-bg: #ffffff;
+    --input-bg: #ffffff;
+    --input-border: #dcdfe6;
+    --btn-bg: #409eff;
+    --btn-text: #ffffff;
+    --btn-warning-bg: #f56c6c;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --link-color: #409eff;
+    --thead-bg: transparent;
+    --theme-color: #409eff;
+    --selected-bg: rgba(var(--primary-rgb), 0.2);
+}
+
+/* 影院模式变量 */
+[data-theme="cinema"] {
+    --primary-rgb: 99, 102, 241;
+    --bg-color: #0f172a;
+    --background-color: #0f172a;
+    --hover-color: #1e293b;
+    --text-color: #f1f5f9;
+    --border-color: #334155;
+    --hover-bg: #1e293b;
+    --card-bg: #1e293b;
+    --container-bg: #0f172a;
+    --input-bg: #1e293b;
+    --input-border: #475569;
+    --btn-bg: #6366f1;
+    --btn-text: #f8fafc;
+    --btn-warning-bg: #ef4444;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --link-color: #818cf8;
+    --thead-bg: #1e293b;
+    --theme-color: #6366f1;
+    --selected-bg: rgba(var(--primary-rgb), 0.25);
+}
+
+/* 应用变量到全局样式 */
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+[data-theme="cinema"] body {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 30%, #0f172a 70%, #1a1333 100%);
+    background-attachment: fixed;
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+[data-theme="cinema"] .container {
+    background: rgba(30, 41, 59, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(71, 85, 105, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.container {
+    background-color: var(--container-bg);
+}
+
+#taskTable tr,
+#accountTable tr {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    box-shadow: 0 1px 3px var(--shadow-color);
+}
+
+#taskTable tr:hover,
+#accountTable tr:hover {
+    box-shadow: 0 4px 8px var(--shadow-color);
+}
+
+a {
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+.modal-content {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+input, select, textarea {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-color);
+}
+
+button {
+    background-color: var(--btn-bg);
+    color: var(--btn-text);
+}
+
+table {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+table thead {
+    background-color: var(--thead-bg);
+}
+
+table thead th {
+    background-color: var(--thead-bg);
+}
+
+tr {
+    background-color: var(--card-bg);
+}
+
+td, th {
+    border-color: var(--border-color);
+}
+
+/* 保持原有的主题切换按钮样式 */
+.theme-switch {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.theme-icon {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    vertical-align: middle;
+    background-color: var(--text-color);
+    -webkit-mask-size: cover;
+    mask-size: cover;
+}
+
+/* 明亮模式下的图标颜色 */
+.theme-toggle-btn .theme-icon,
+.theme-option .theme-icon {
+    background-color: rgba(0, 0, 0, 0.85);
+}
+
+/* 影院模式下的图标颜色 */
+[data-theme="cinema"] .theme-toggle-btn .theme-icon,
+[data-theme="cinema"] .theme-option .theme-icon {
+    background-color: rgba(255, 255, 255, 0.85);
+}
+
+/* 根据当前主题切换按钮图标 */
+[data-theme="cinema"] .theme-toggle-btn .theme-icon {
+    -webkit-mask-image: url('/icons/moon.svg');
+    mask-image: url('/icons/moon.svg');
+}
+
+[data-theme="auto"] .theme-toggle-btn .theme-icon {
+    -webkit-mask-image: url('/icons/auto.svg');
+    mask-image: url('/icons/auto.svg');
+}
+
+[data-theme="light"] .theme-toggle-btn .theme-icon,
+.theme-toggle-btn .theme-icon {
+    -webkit-mask-image: url('/icons/sun.svg');
+    mask-image: url('/icons/sun.svg');
+}
+
+/* 下拉菜单中的图标 */
+.theme-option[data-theme="light"] .theme-icon {
+    -webkit-mask-image: url('/icons/sun.svg');
+    mask-image: url('/icons/sun.svg');
+}
+
+.theme-option[data-theme="cinema"] .theme-icon {
+    -webkit-mask-image: url('/icons/moon.svg');
+    mask-image: url('/icons/moon.svg');
+}
+
+.theme-option[data-theme="auto"] .theme-icon {
+    -webkit-mask-image: url('/icons/auto.svg');
+    mask-image: url('/icons/auto.svg');
+}
+
+button {
+    background-color: var(--btn-bg);
+    color: var(--btn-text);
+}
+
+[data-theme='cinema'] button {
+    background: var(--bg-color);
+    color: var(--btn-text);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme='cinema'] .status-badge {
+    background: var(--bg-color);
+}
+[data-theme='cinema'] button:hover {
+    background-color: var(--hover-bg);
+}
+
+[data-theme='cinema'] .folder-tree-item.selected {
+    background: var(--bg-color);
+}
+[data-theme='cinema'] .folder-tree-item:hover {
+    background-color: var(--hover-bg);
+}
+
+/* 账号列表表头栏毛玻璃效果 */
+#accountTable thead th {
+    background: rgba(255, 255, 255, 0.45) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}

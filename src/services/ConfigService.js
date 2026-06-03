@@ -59,7 +59,8 @@ class ConfigService {
         services: {
           telegram: true,
           tmdb: true,
-          cloud189: false
+          cloud189: false,
+          hdhive: true
         }
       },
       bark: {
@@ -112,6 +113,15 @@ class ConfigService {
         enable: false,
         baseUrl: '',
         apiKey: ''
+      },
+      hdhive: {
+        enabled: false,
+        clientId: '',        // OpenAPI 应用公开 ID (client_id)
+        apiKey: '',          // OpenAPI 应用 Secret (X-API-Key)
+        baseUrl: 'https://hdhive.com',
+        accessToken: '',     // 用户授权 Access Token
+        refreshToken: '',    // 刷新 Token
+        tokenExpiresAt: null // Token 过期时间戳
       },
       customPush: [] // 自定义推送
     };

@@ -1,0 +1,818 @@
+/* ============================================
+   影院模式（Cinema Mode）主题样式
+   版本：v1.1
+   更新日期：2026-05-11
+   ============================================ */
+
+/* ============================================
+   影院模式 - 背景容器
+   ============================================ */
+
+.cinema-bg-container {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    pointer-events: none;
+}
+
+/* 影院模式激活 */
+[data-theme="cinema"] .cinema-bg-container {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ============================================
+   影院模式 - 双缓冲图层
+   ============================================ */
+
+.cinema-bg-layer {
+    position: absolute;
+    inset: -40px;  /* 略大于视口，避免边缘露出 */
+    background-color: #0f172a;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    /* 视觉效果处理：降低虚化度，让海报背景更清晰可见。 */
+    filter: blur(8px) saturate(1.2) brightness(0.78);
+    transform: scale(1.08);
+
+    /* 过渡动画 */
+    transition: opacity 1.8s ease-in-out;
+
+    /* GPU 加速 */
+    will-change: opacity, background-image;
+}
+
+/* 当前显示层 */
+.cinema-bg-current {
+    opacity: 1;
+    z-index: 1;
+}
+
+/* 下一帧预加载层 */
+.cinema-bg-next {
+    opacity: 0;
+    z-index: 2;
+}
+
+/* 无海报时的默认背景 - 动态渐变 */
+.cinema-bg-container.no-posters .cinema-bg-current {
+    background: linear-gradient(
+        135deg,
+        #0f172a 0%,
+        #1e1b4b 30%,
+        #312e81 50%,
+        #1e1b4b 70%,
+        #0f172a 100%
+    );
+    background-size: 400% 400%;
+    animation: cinemaGradientShift 20s ease infinite;
+}
+
+@keyframes cinemaGradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* ============================================
+   影院模式 - 毛玻璃遮罩
+   ============================================ */
+
+.cinema-bg-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+
+    /* 多层渐变遮罩 - 大幅降低透明度让海报清晰可见 */
+    background:
+        /* 顶部渐变 - 让顶栏可见 */
+        linear-gradient(
+            180deg,
+            rgba(15, 23, 42, 0.55) 0%,
+            rgba(15, 23, 42, 0.2) 80px,
+            transparent 120px
+        ),
+        /* 底部渐变 - 让底部内容可见 */
+        linear-gradient(
+            0deg,
+            rgba(15, 23, 42, 0.6) 0%,
+            rgba(15, 23, 42, 0.2) 60px,
+            transparent 100px
+        ),
+        /* 全局遮罩 - 大幅降低透明度 */
+        linear-gradient(
+            180deg,
+            rgba(15, 23, 42, 0.15) 0%,
+            rgba(15, 23, 42, 0.25) 50%,
+            rgba(15, 23, 42, 0.2) 100%
+        );
+
+    /* 移除毛玻璃效果，减少背景干扰 */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+/* ============================================
+   影院模式 - 锁定指示器
+   ============================================ */
+
+.cinema-locked-indicator {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+
+    background: rgba(99, 102, 241, 0.95);
+    color: #fff;
+    border-radius: 24px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--font-family);
+
+    box-shadow:
+        0 4px 20px rgba(99, 102, 241, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+
+    z-index: 1001;
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: auto; /* 允许点击关闭 */
+    cursor: pointer;
+}
+
+.cinema-locked-indicator.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.cinema-locked-indicator i {
+    font-size: 16px;
+}
+
+.cinema-locked-text {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 移动端锁定指示器：点击可关闭 */
+.cinema-locked-indicator::after {
+    content: "×";
+    margin-left: 8px;
+    font-size: 16px;
+    opacity: 0.7;
+}
+
+/* ============================================
+   影院模式 - UI 组件适配
+   ============================================ */
+
+/* 侧边栏 */
+[data-theme="cinema"] .sidebar {
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-right: 1px solid rgba(99, 102, 241, 0.12);
+}
+
+/* 侧边栏导航项 - 影院模式专用样式 */
+[data-theme="cinema"] .nav-item {
+    color: #e2e8f0;
+}
+
+[data-theme="cinema"] .nav-item i {
+    color: #94a3b8;
+}
+
+[data-theme="cinema"] .nav-item:hover {
+    background: rgba(99, 102, 241, 0.15);
+    color: #f1f5f9;
+}
+
+[data-theme="cinema"] .nav-item:hover i {
+    color: #a5b4fc;
+}
+
+[data-theme="cinema"] .nav-item.active {
+    background: rgba(99, 102, 241, 0.2);
+    color: #a5b4fc;
+}
+
+[data-theme="cinema"] .nav-item.active i {
+    color: #818cf8;
+}
+
+/* 导航分组标题 */
+[data-theme="cinema"] .nav-group-title {
+    color: #64748b;
+}
+
+/* 版本区域 */
+[data-theme="cinema"] .sidebar-version {
+    border-bottom-color: rgba(99, 102, 241, 0.15);
+}
+
+[data-theme="cinema"] .sidebar-version .version-badge {
+    background: rgba(99, 102, 241, 0.25);
+    color: #a5b4fc;
+    border-color: rgba(99, 102, 241, 0.35);
+}
+
+/* 侧边栏底部 */
+[data-theme="cinema"] .sidebar-footer {
+    border-top-color: rgba(99, 102, 241, 0.15);
+}
+
+[data-theme="cinema"] .copyright {
+    color: #64748b;
+}
+
+/* 顶部栏 */
+[data-theme="cinema"] .topbar {
+    /* 影院模式顶栏不再使用遮罩，让海报背景保持连续可见。 */
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* 顶部栏搜索框 - 透明效果并填满可用空间 */
+[data-theme="cinema"] .topbar-search {
+    flex: 0 0 var(--topbar-search-width);
+    width: var(--topbar-search-width);
+    max-width: var(--topbar-search-width);
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+[data-theme="cinema"] .topbar-search input {
+    background: transparent;
+    color: #e2e8f0;
+}
+
+[data-theme="cinema"] .topbar-search input::placeholder {
+    color: rgba(226, 232, 240, 0.5);
+}
+
+[data-theme="cinema"] .search-shortcut {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: rgba(226, 232, 240, 0.6);
+}
+
+/* 页面容器 */
+[data-theme="cinema"] .page-container {
+    background: transparent;
+}
+
+/* 主内容区域 */
+[data-theme="cinema"] .main-content {
+    background: transparent;
+}
+
+/* Tab 内容区域 */
+[data-theme="cinema"] .tab-content {
+    background: transparent;
+}
+
+/* 影院模式页签外层：这些只负责布局，不能形成大面积遮罩盖住背景轮播。 */
+[data-theme="cinema"] #dashboardTab,
+[data-theme="cinema"] #accountTab,
+[data-theme="cinema"] #settingsTab,
+[data-theme="cinema"] #settingsForm,
+[data-theme="cinema"] .hero-stats,
+[data-theme="cinema"] .settings-card-body,
+[data-theme="cinema"] .settings-group {
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* 任务操作栏 */
+[data-theme="cinema"] .task-operations {
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: rgba(99, 102, 241, 0.15);
+}
+
+/* 表单头部 */
+[data-theme="cinema"] .form-header {
+    background: transparent;
+}
+
+/* 搜索栏 */
+[data-theme="cinema"] .search-bar {
+    background: transparent;
+}
+
+/* 删除选项区域 */
+[data-theme="cinema"] .delete-cloud-options {
+    background: transparent;
+}
+
+/* 任务卡片 - 媒体墙视图 */
+[data-theme="cinema"][data-ui-style="media"] #taskTable tr.media-wall-card,
+[data-theme="cinema"] .media-wall-card {
+    background-color: rgba(15, 23, 42, 0.35) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(99, 102, 241, 0.1);
+    
+    /* 防止圆角抗锯齿次像素漏光和溢出 */
+    background-clip: padding-box;
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+    transform: translateZ(0);
+    will-change: transform, box-shadow;
+}
+
+[data-theme="cinema"][data-ui-style="media"] #taskTable tr.media-wall-card:hover,
+[data-theme="cinema"] .media-wall-card:hover {
+    background-color: rgba(15, 23, 42, 0.5) !important;
+    border-color: rgba(99, 102, 241, 0.4);
+    box-shadow:
+        0 12px 48px rgba(0, 0, 0, 0.4),
+        0 0 24px rgba(99, 102, 241, 0.2);
+}
+
+/* 影院模式下保留媒体墙卡片的渐变遮罩（用于显示卡片上的海报） */
+[data-theme="cinema"][data-ui-style="media"] #taskTable tr.media-wall-card::before {
+    background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.85) 100%) !important;
+    /* 继承父级圆角，防止遮罩层直角溢出漏光 */
+    border-radius: inherit;
+    background-clip: padding-box;
+}
+
+/* 任务卡片 - 表格视图 */
+[data-theme="cinema"][data-ui-style="classic"] #taskTable tr,
+[data-theme="cinema"] #accountTable tr {
+    background-color: rgba(15, 23, 42, 0.35) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+}
+
+/* 账号管理表格：覆盖账号分组行的行内背景和通用 td/th 浅色背景。 */
+[data-theme="cinema"] #accountTable tr.family-group-header,
+[data-theme="cinema"] #accountTable tr.family-group-row {
+    background: rgba(15, 23, 42, 0.46) !important;
+    background-color: rgba(15, 23, 42, 0.46) !important;
+    color: #f1f5f9 !important;
+    border-color: rgba(99, 102, 241, 0.24) !important;
+}
+
+[data-theme="cinema"] #accountTable tr.family-group-header td,
+[data-theme="cinema"] #accountTable tr.family-group-row td {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #e2e8f0 !important;
+}
+
+[data-theme="cinema"] #accountTable thead,
+[data-theme="cinema"] #accountTable thead tr {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+[data-theme="cinema"] #accountTable thead th {
+    background: rgba(15, 23, 42, 0.45) !important;
+    background-color: rgba(15, 23, 42, 0.45) !important;
+    color: #cbd5e1 !important;
+    border-color: rgba(99, 102, 241, 0.18) !important;
+    box-shadow: none !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+[data-theme="cinema"] #accountTable tr.family-group-row:hover {
+    background: rgba(15, 23, 42, 0.58) !important;
+    background-color: rgba(15, 23, 42, 0.58) !important;
+}
+
+/* 表格容器 */
+[data-theme="cinema"] .table-container {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* 影院模式表格外层：外层表格/网格必须透明，避免空白区域形成整块遮罩盖住轮播背景。 */
+[data-theme="cinema"][data-ui-style="media"] #taskTable,
+[data-theme="cinema"][data-ui-style="media"] #taskTable tbody,
+[data-theme="cinema"][data-ui-style="media"] #taskTab .table-container,
+[data-theme="cinema"][data-ui-style="media"] #accountTable,
+[data-theme="cinema"][data-ui-style="media"] #accountTable tbody,
+[data-theme="cinema"][data-ui-style="media"] #accountTab .table-container {
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* 弹窗 */
+[data-theme="cinema"] .modal-content {
+    background: rgba(30, 41, 59, 0.92);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    box-shadow: 0 16px 64px rgba(0, 0, 0, 0.6);
+}
+
+/* 设置卡片 */
+[data-theme="cinema"] .settings-card {
+    background: rgba(30, 41, 59, 0.62);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(99, 102, 241, 0.12);
+}
+
+/* 设置卡片头部 */
+[data-theme="cinema"] .settings-card-header {
+    background: rgba(99, 102, 241, 0.08);
+    border-bottom: 1px solid rgba(99, 102, 241, 0.12);
+}
+
+/* 设置项 */
+[data-theme="cinema"] .settings-item {
+    background: rgba(15, 23, 42, 0.35) !important;
+    border: 1px solid rgba(99, 102, 241, 0.12) !important;
+    border-radius: 8px !important;
+    margin-bottom: 16px !important;
+}
+
+[data-theme="cinema"] .settings-item:last-child {
+    margin-bottom: 0 !important;
+}
+
+[data-theme="cinema"] .settings-item:hover {
+    background: rgba(15, 23, 42, 0.5) !important;
+    border-color: rgba(99, 102, 241, 0.25) !important;
+}
+
+/* 输入框 */
+[data-theme="cinema"] input,
+[data-theme="cinema"] select,
+[data-theme="cinema"] textarea {
+    background: rgba(15, 23, 42, 0.9);
+    border-color: rgba(99, 102, 241, 0.2);
+}
+
+[data-theme="cinema"] input:focus,
+[data-theme="cinema"] select:focus,
+[data-theme="cinema"] textarea:focus {
+    border-color: rgba(99, 102, 241, 0.5);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* 按钮 - 影院模式统一为品牌蓝色 */
+[data-theme="cinema"] button:not(.theme-toggle-btn):not(.sidebar-toggle):not(.sidebar-pin):not(.btn-default):not(.btn-danger):not(.btn-warning) {
+    background: #4B4BFA;
+    border-color: rgba(75, 75, 250, 0.3);
+    box-shadow: 0 2px 12px rgba(75, 75, 250, 0.4), 0 0 20px rgba(75, 75, 250, 0.15);
+    color: #fff;
+}
+
+[data-theme="cinema"] button:not(.theme-toggle-btn):not(.sidebar-toggle):not(.sidebar-pin):not(.btn-default):not(.btn-danger):not(.btn-warning):hover {
+    background: #3B3BEA;
+    box-shadow: 0 4px 16px rgba(75, 75, 250, 0.5), 0 0 28px rgba(75, 75, 250, 0.25);
+    border-color: rgba(75, 75, 250, 0.5);
+}
+
+[data-theme="cinema"] .btn-default {
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    color: #f1f5f9;
+}
+
+[data-theme="cinema"] .btn-default:hover {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.4);
+}
+
+/* 添加任务占位卡片 */
+[data-theme="cinema"] .add-task-placeholder {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: 2px dashed rgba(99, 102, 241, 0.4) !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* 面板卡片：修正内联 var(--bg-card) 造成的大块遮罩，只保留轻玻璃面板。 */
+[data-theme="cinema"] .panel-card {
+    background: rgba(30, 41, 59, 0.62) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(99, 102, 241, 0.12);
+}
+
+/* 统计卡片 */
+[data-theme="cinema"] .hero-stat-card {
+    background: rgba(30, 41, 59, 0.62);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(99, 102, 241, 0.12);
+}
+
+/* 主题下拉菜单 */
+[data-theme="cinema"] .theme-dropdown {
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+[data-theme="cinema"] .theme-option:hover {
+    background: rgba(99, 102, 241, 0.15);
+}
+
+/* 更多操作菜单 */
+[data-theme="cinema"] .more-actions-menu {
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+[data-theme="cinema"] .more-actions-item {
+    color: #f1f5f9;
+}
+
+[data-theme="cinema"] .more-actions-item:hover {
+    background: rgba(99, 102, 241, 0.15);
+    color: #a5b4fc;
+}
+
+/* 通知下拉框 */
+[data-theme="cinema"] .notification-dropdown {
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+/* ============================================
+   影院模式 - CSS 变量覆盖
+   ============================================ */
+
+[data-theme="cinema"] {
+    --bg-color: transparent;
+    --bg-main: transparent;
+    --background-color: transparent;
+    --bg-sidebar: rgba(15, 23, 42, 0.88);
+    --bg-card: rgba(30, 41, 59, 0.78);
+    --hover-color: rgba(99, 102, 241, 0.15);
+    --hover-bg: rgba(99, 102, 241, 0.15);
+    --text-main: #f1f5f9;
+    --text-color: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border-color: rgba(99, 102, 241, 0.15);
+    --container-bg: transparent;
+    --input-bg: rgba(15, 23, 42, 0.9);
+    --input-border: rgba(99, 102, 241, 0.2);
+    --card-bg: rgba(30, 41, 59, 0.78);
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --thead-bg: rgba(15, 23, 42, 0.5);
+    --surface-muted: transparent;
+    --header-surface: transparent;
+    --panel-surface: transparent;
+    --panel-border: rgba(99, 102, 241, 0.15);
+}
+
+/* 影院模式下确保内容层在背景之上 */
+[data-theme="cinema"] .app-layout {
+    position: relative;
+    z-index: 1;
+}
+
+/* 影院模式下 body 背景透明，露出底层海报 */
+[data-theme="cinema"] body {
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+/* 移除影院模式下的 body 装饰元素 */
+[data-theme="cinema"] body::before,
+[data-theme="cinema"] body::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* 确保 html 元素也透明 */
+[data-theme="cinema"] html {
+    background-color: transparent;
+}
+
+/* ============================================
+   影院模式 - 表格样式适配
+   ============================================ */
+
+[data-theme="cinema"] #taskTable thead,
+[data-theme="cinema"] #accountTable thead {
+    background: rgba(15, 23, 42, 0.5);
+}
+
+[data-theme="cinema"] #taskTable thead th,
+[data-theme="cinema"] #accountTable thead th {
+    background: rgba(15, 23, 42, 0.5);
+    border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+[data-theme="cinema"] #taskTable td,
+[data-theme="cinema"] #accountTable td {
+    border-color: rgba(99, 102, 241, 0.08);
+}
+
+/* ============================================
+   影院模式 - 表单样式适配
+   ============================================ */
+
+[data-theme="cinema"] .form-group label {
+    color: #e2e8f0;
+}
+
+[data-theme="cinema"] .form-text {
+    color: #94a3b8;
+}
+
+[data-theme="cinema"] .form-body {
+    background: transparent;
+}
+
+/* ============================================
+   影院模式 - 复选框/单选框适配
+   ============================================ */
+
+[data-theme="cinema"] input[type="checkbox"],
+[data-theme="cinema"] input[type="radio"] {
+    background: rgba(15, 23, 42, 0.9);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+[data-theme="cinema"] input[type="checkbox"]:checked,
+[data-theme="cinema"] input[type="radio"]:checked {
+    background: #6366f1;
+    border-color: #6366f1;
+}
+
+/* ============================================
+   影院模式 - 滚动条样式
+   ============================================ */
+
+[data-theme="cinema"] ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+[data-theme="cinema"] ::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 4px;
+}
+
+[data-theme="cinema"] ::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.4);
+    border-radius: 4px;
+}
+
+[data-theme="cinema"] ::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.6);
+}
+
+/* ============================================
+   影院模式 - 兼容性降级
+   ============================================ */
+
+/* 不支持 backdrop-filter 的浏览器降级 */
+@supports not (backdrop-filter: blur(12px)) {
+    .cinema-bg-overlay {
+        background: rgba(15, 23, 42, 0.92);
+    }
+
+    [data-theme="cinema"] .sidebar {
+        background: rgba(15, 23, 42, 0.95);
+    }
+
+    [data-theme="cinema"] .topbar {
+        background: transparent;
+    }
+
+    [data-theme="cinema"] .topbar-search {
+        background: transparent;
+    }
+
+    [data-theme="cinema"] .modal-content {
+        background: rgba(30, 41, 59, 0.98);
+    }
+}
+
+/* 顶栏按钮在影院模式下保持实色按钮，不叠加玻璃/阴影，避免海报背景上出现光晕。 */
+[data-theme="cinema"] .topbar .sidebar-toggle,
+[data-theme="cinema"] .topbar .notification-btn,
+[data-theme="cinema"] .theme-toggle-btn {
+    background: #4B4BFA;
+    border-color: #4B4BFA;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+[data-theme="cinema"] .topbar .sidebar-toggle:hover,
+[data-theme="cinema"] .topbar .notification-btn:hover,
+[data-theme="cinema"] .theme-toggle-btn:hover {
+    background: #3B3BEA;
+    box-shadow: none;
+}
+
+/* ============================================
+   影院模式 - 删除确认弹窗适配
+   ============================================ */
+
+[data-theme="cinema"] .delete-confirm-content {
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+[data-theme="cinema"] .delete-confirm-header {
+    border-bottom-color: rgba(99, 102, 241, 0.12);
+}
+
+[data-theme="cinema"] .delete-confirm-header h3 {
+    color: #f1f5f9;
+}
+
+[data-theme="cinema"] .delete-confirm-body p {
+    color: #94a3b8;
+}
+
+[data-theme="cinema"] .delete-confirm-body .task-name {
+    color: #e2e8f0;
+}
+
+[data-theme="cinema"] .delete-cloud-checkbox {
+    background: rgba(15, 23, 42, 0.6);
+    border-color: rgba(99, 102, 241, 0.15);
+}
+
+[data-theme="cinema"] .delete-cloud-checkbox:hover {
+    background: rgba(15, 23, 42, 0.8);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+[data-theme="cinema"] .delete-cloud-checkbox span {
+    color: #e2e8f0;
+}
+
+[data-theme="cinema"] .delete-confirm-footer {
+    background: rgba(15, 23, 42, 0.6);
+    border-top-color: rgba(99, 102, 241, 0.12);
+}
+
+[data-theme="cinema"] .btn-cancel {
+    background: rgba(30, 41, 59, 0.9);
+    color: #e2e8f0;
+    border-color: rgba(99, 102, 241, 0.25);
+}
+
+[data-theme="cinema"] .btn-cancel:hover {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.4);
+}
+
+@media (max-width: 720px) {
+    [data-theme="cinema"] .topbar-search {
+        flex-basis: min(var(--topbar-search-width), calc(100vw - 220px));
+        width: min(var(--topbar-search-width), calc(100vw - 220px));
+        max-width: min(var(--topbar-search-width), calc(100vw - 220px));
+    }
+}
+
+/* 移动端：影院模式搜索框跟随flex布局 */
+@media (max-width: 768px) {
+    [data-theme="cinema"] .topbar-search {
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        width: auto !important;
+        max-width: none !important;
+    }
+}

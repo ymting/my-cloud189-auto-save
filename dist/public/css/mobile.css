@@ -1,0 +1,824 @@
+/* mobile.css - 手机浏览器适配 */
+
+/* ============================================
+   移动端断点：768px 以下
+   ============================================ */
+@media screen and (max-width: 768px) {
+    /* ---------- 基础布局 ---------- */
+    html {
+        overflow-x: hidden;
+    }
+
+    body {
+        overflow-x: hidden;
+        overflow-y: hidden;
+        width: 100%;
+        max-width: 100vw;
+    }
+
+    .app-layout {
+        flex-direction: column;
+        overflow-x: hidden;
+        overflow-y: hidden;
+        width: 100%;
+        max-width: 100vw;
+    }
+
+    .main-content {
+        overflow-x: hidden;
+        overflow-y: hidden;
+        width: 100%;
+        max-width: 100%;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .page-container {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* 侧边栏：移动端全屏覆盖 */
+    .sidebar {
+        width: 100%;
+        max-width: 280px;
+        z-index: 4000;
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .sidebar.pinned {
+        position: fixed;
+        transform: translateX(-100%);
+    }
+
+    .sidebar.pinned.open {
+        transform: translateX(0);
+    }
+
+    /* 侧边栏遮罩层 */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 3999;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .sidebar-overlay.show {
+        display: block;
+        opacity: 1;
+    }
+
+    /* 顶栏：紧凑布局，防止溢出截断 */
+    .topbar {
+        height: 56px;
+        padding: 0 12px;
+        gap: 6px;
+        overflow: visible;
+        flex-wrap: nowrap;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+
+
+    /* 搜索框弹性收缩，保证按钮不被挤出 */
+    .topbar-search {
+        flex: 1 1 0;
+        min-width: 0;
+        max-width: none;
+        height: 36px;
+        padding: 0 12px;
+    }
+
+    .topbar-search input {
+        font-size: 14px;
+    }
+
+    .search-shortcut {
+        display: none !important;
+    }
+
+    /* 操作区不收缩，消除右侧padding */
+    .topbar-actions {
+        gap: 6px;
+        padding-right: 0 !important;
+        flex-shrink: 0;
+    }
+
+    /* 主题开关在移动端不绝对定位 */
+    .topbar .theme-switch {
+        position: static !important;
+        transform: none !important;
+        right: auto !important;
+    }
+
+    .sidebar-toggle,
+    .notification-btn,
+    .theme-toggle-btn {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+    }
+
+    .sidebar-toggle i,
+    .notification-btn i,
+    .theme-toggle-btn i {
+        font-size: 18px;
+    }
+
+    /* 页面容器 */
+    .page-container {
+        padding: 16px;
+    }
+
+    /* 页面标题 */
+    .page-header {
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .page-title h2 {
+        font-size: 20px;
+    }
+
+    .page-title p {
+        font-size: 13px;
+    }
+
+    /* ---------- 仪表盘 ---------- */
+    .hero-stats {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    .hero-stat-card {
+        padding: 12px;
+    }
+
+    .hero-stat-label {
+        font-size: 12px;
+    }
+
+    .hero-stat-card strong {
+        font-size: 24px;
+    }
+
+    .panel-card {
+        padding: 16px !important;
+    }
+
+    .panel-card h3 {
+        font-size: 14px !important;
+    }
+
+    /* ---------- 任务卡片 ---------- */
+    /* 移动端媒体墙（明亮模式）：单列布局 */
+    [data-ui-style="media"] #taskTable tbody {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 12px;
+    }
+
+    [data-ui-style="media"] #taskTable tr.media-wall-card {
+        grid-template-columns: 100px minmax(0, 1fr);
+        gap: 12px;
+        padding: 14px;
+    }
+
+    .media-wall-poster {
+        width: 100px;
+        min-height: 150px;
+    }
+
+    .media-wall-title {
+        font-size: 16px;
+    }
+
+    .media-wall-meta {
+        font-size: 12px;
+    }
+
+    .media-wall-overview {
+        min-height: auto;
+        -webkit-line-clamp: 2;
+        font-size: 12px;
+    }
+
+    /* 影院模式卡片移动端：单列布局 + 竖向海报卡片等比例更大展示（宽度设为 300px 并居中以最大化填满两边留白，高度 470px 保持等比例竖版形态） */
+    [data-theme="cinema"][data-ui-style="media"] #taskTable tbody {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        justify-items: center !important;
+        gap: 20px; /* 适当增加卡片之间的上下间隙 */
+    }
+
+    [data-theme="cinema"][data-ui-style="media"] #taskTable tr.media-wall-card {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        width: 300px !important;
+        height: 470px !important;
+        min-height: 470px !important;
+        max-height: 470px !important;
+        padding: 12px !important; /* 适当增加内边距 */
+        border-radius: 12px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 影院模式添加任务占位卡片：跟随单列高度并等比例缩放 */
+    [data-theme="cinema"][data-ui-style="media"] .add-task-placeholder {
+        width: 300px !important;
+        height: 470px !important;
+        min-height: 470px !important;
+        max-height: 470px !important;
+    }
+
+    [data-theme="cinema"][data-ui-style="media"] .add-task-placeholder td {
+        padding: 16px !important;
+    }
+
+    [data-theme="cinema"][data-ui-style="media"] .add-task-placeholder .add-task-icon {
+        width: 60px !important;
+        height: 60px !important;
+        margin-bottom: 15px !important;
+    }
+
+    [data-theme="cinema"][data-ui-style="media"] .add-task-placeholder .add-task-icon i {
+        font-size: 30px !important;
+    }
+
+    [data-theme="cinema"][data-ui-style="media"] .add-task-placeholder div {
+        font-size: 13px !important;
+        margin-bottom: 6px !important;
+    }
+
+    /* 解决移动端媒体墙下的左右滑动问题，同时保持表格视图下的横向滚动 */
+    [data-ui-style="media"] .table-container {
+        overflow-x: hidden !important;
+    }
+    [data-ui-style="media"] #taskTable {
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    .task-card {
+        padding: 12px;
+    }
+
+    .task-card-title {
+        font-size: 14px;
+    }
+
+    .task-card-meta {
+        font-size: 12px;
+    }
+
+    .task-actions {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .task-actions button {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .task-more-menu {
+        right: 0;
+        left: auto;
+        min-width: 140px;
+    }
+
+    /* 移动端：点击卡片展开简介时的样式 */
+    [data-theme="cinema"] #taskTable tr.media-wall-card.overview-expanded .media-card-hover-overview {
+        opacity: 1 !important;
+    }
+
+    [data-theme="cinema"] #taskTable tr.media-wall-card:not(.overview-expanded) .media-card-hover-overview {
+        opacity: 0 !important;
+    }
+
+    /* ---------- 模态框 ---------- */
+    .modal-content {
+        width: 95% !important;
+        max-height: 90vh;
+        margin: 16px auto;
+    }
+
+    .modal-header {
+        padding: 12px 16px;
+    }
+
+    .modal-header h3 {
+        font-size: 16px;
+    }
+
+    .form-body {
+        padding: 12px 16px;
+        max-height: calc(90vh - 120px);
+    }
+
+    .form-group {
+        margin-bottom: 12px;
+    }
+
+    .form-group label {
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 10px 12px;
+        font-size: 16px;
+    }
+
+    .modal-footer,
+    .form-footer {
+        padding: 12px 16px;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .modal-footer button,
+    .form-footer button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* ---------- 表格视图 ---------- */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+
+    table {
+        min-width: 600px;
+    }
+
+    th, td {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    /* ---------- 按钮组 ---------- */
+    .button-group {
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .button-group button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .operation-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    /* ---------- 设置页面 ---------- */
+    .settings-item-content {
+        grid-template-columns: 1fr !important;
+    }
+
+    .settings-section {
+        padding: 16px;
+    }
+
+    .settings-section h3 {
+        font-size: 16px;
+    }
+
+    .proxy-services-container {
+        flex-direction: column;
+    }
+
+    .proxy-service-item {
+        flex: 0 0 100%;
+    }
+
+    /* ---------- 通知下拉 ---------- */
+    .notification-dropdown {
+        position: fixed !important;
+        left: 12px !important;
+        right: 12px !important;
+        max-width: none;
+        min-width: auto;
+        top: auto !important;
+        bottom: 20px;
+    }
+
+    /* ---------- 主题下拉 ---------- */
+    .theme-dropdown {
+        right: 12px !important;
+        left: auto !important;
+    }
+
+    /* ---------- 文件夹选择器 ---------- */
+    .folder-selector-modal {
+        width: 95% !important;
+        height: 80vh;
+    }
+
+    .folder-tree {
+        max-height: 50vh;
+    }
+
+    /* ---------- 日志面板 ---------- */
+    #logsModal .modal-content {
+        width: 100% !important;
+        height: 100vh;
+        max-height: 100vh;
+        margin: 0;
+        border-radius: 0;
+    }
+
+    .logs-container {
+        height: calc(100vh - 120px);
+    }
+
+    /* ---------- AI 对话 ---------- */
+    .chat-container {
+        padding: 12px;
+    }
+
+    .chat-message {
+        max-width: 90%;
+    }
+
+    .chat-input-area {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .chat-input-area input,
+    .chat-input-area textarea {
+        font-size: 16px;
+    }
+}
+
+/* ============================================
+   超小屏幕：480px 以下
+   ============================================ */
+@media screen and (max-width: 480px) {
+    .topbar {
+        height: 50px;
+        padding: 0 8px;
+        gap: 6px;
+    }
+
+    .sidebar-toggle {
+        padding: 4px 8px;
+    }
+
+    .topbar-search {
+        height: 34px;
+        padding: 0 10px;
+    }
+
+    .topbar-search i {
+        font-size: 16px;
+    }
+
+    .topbar-search input {
+        font-size: 14px;
+    }
+
+    .sidebar-toggle,
+    .notification-btn,
+    .theme-toggle-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .page-container {
+        padding: 12px;
+    }
+
+    .hero-stats {
+        grid-template-columns: 1fr !important;
+    }
+
+    .task-card {
+        padding: 10px;
+    }
+
+    .task-card-title {
+        font-size: 13px;
+    }
+
+    .modal-content {
+        width: 100% !important;
+        height: 100vh;
+        max-height: 100vh;
+        margin: 0;
+        border-radius: 0;
+    }
+
+    .form-body {
+        max-height: calc(100vh - 100px);
+    }
+}
+
+/* ============================================
+   影院模式移动端适配
+   ============================================ */
+@media screen and (max-width: 768px) {
+    [data-theme="cinema"] {
+        background-attachment: fixed;
+    }
+
+    [data-theme="cinema"] .sidebar {
+        background: rgba(15, 23, 42, 0.98);
+        border-right: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    [data-theme="cinema"] .sidebar-overlay {
+        background: rgba(0, 0, 0, 0.7);
+    }
+
+    [data-theme="cinema"] .topbar {
+        background: transparent;
+        border-bottom-color: rgba(99, 102, 241, 0.15);
+    }
+
+    [data-theme="cinema"] .topbar-search {
+        background: rgba(30, 41, 59, 0.8);
+        border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    [data-theme="cinema"] .notification-dropdown {
+        background: rgba(15, 23, 42, 0.98);
+        border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    [data-theme="cinema"] .modal-content {
+        background: rgba(15, 23, 42, 0.98);
+        border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    [data-theme="cinema"] .task-card {
+        background: rgba(30, 41, 59, 0.9);
+        border-color: rgba(99, 102, 241, 0.15);
+    }
+
+    [data-theme="cinema"] .sidebar-toggle,
+    [data-theme="cinema"] .notification-btn,
+    [data-theme="cinema"] .theme-toggle-btn {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        box-shadow: 0 2px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    [data-theme="cinema"] .panel-card {
+        background: rgba(30, 41, 59, 0.8);
+        border-color: rgba(99, 102, 241, 0.15);
+    }
+
+    [data-theme="cinema"] .hero-stat-card {
+        background: rgba(30, 41, 59, 0.8);
+        border-color: rgba(99, 102, 241, 0.15);
+    }
+
+    /* 影院模式锁定指示器 */
+    .cinema-locked-indicator {
+        bottom: 80px;
+        right: 12px;
+        left: auto;
+        max-width: 200px;
+        padding: 8px 14px;
+        font-size: 12px;
+        border-radius: 12px;
+    }
+
+    .cinema-locked-text {
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* 影院模式卡片顶部状态区缩小 */
+    [data-theme="cinema"] .media-card-top .status-capsule {
+        min-height: 18px !important;
+        padding: 1px 6px 1px 4px !important;
+        gap: 4px !important;
+    }
+
+    [data-theme="cinema"] .media-card-top .status-capsule-orb {
+        width: 10px !important;
+        height: 10px !important;
+        flex-basis: 10px !important;
+    }
+
+    [data-theme="cinema"] .media-card-top .status-capsule-orb i {
+        font-size: 8px !important;
+    }
+
+    [data-theme="cinema"] .media-card-top .status-capsule-text {
+        font-size: 9px !important;
+    }
+
+    /* 影院模式移动端悬浮简介缩小 */
+    [data-theme="cinema"] .media-card-hover-overview {
+        padding: 12px !important;
+        padding-top: 36px !important;
+        padding-bottom: 110px !important;
+        font-size: 12px !important;
+        line-height: 1.5 !important;
+        -webkit-line-clamp: 10 !important; /* 增加简介容纳行数 */
+    }
+
+    /* 影院模式移动端底部信息 */
+    [data-theme="cinema"] .media-card-bottom {
+        gap: 6px !important;
+    }
+
+    [data-theme="cinema"][data-ui-style="media"] .media-wall-title {
+        font-size: 15px !important; /* 配合大卡片适度调大标题 */
+    }
+
+    [data-theme="cinema"][data-ui-style="media"] .media-wall-meta {
+        font-size: 11px !important;
+        gap: 6px !important;
+    }
+
+    [data-theme="cinema"] .media-progress-text {
+        font-size: 11px !important;
+        gap: 6px !important;
+    }
+
+    [data-theme="cinema"] .media-progress-missing {
+        font-size: 11px !important;
+        margin-top: 3px !important;
+    }
+
+    /* 影院模式移动端操作按钮：右对齐且保持合适紧凑间距 */
+    [data-theme="cinema"] .media-card-footer {
+        margin-top: 8px !important;
+        display: flex !important;
+        justify-content: flex-end !important; /* 卡片底部容器右对齐 */
+        align-items: center !important;
+    }
+
+    [data-theme="cinema"] .media-tags {
+        display: none !important; /* 隐藏标签以释放空间 */
+    }
+
+    [data-theme="cinema"] .media-actions {
+        width: auto !important; /* 取消 100% 宽度以避免拉伸 */
+        display: flex !important;
+        justify-content: flex-end !important; /* 按钮右对齐 */
+        gap: 10px !important; /* 按钮间保持精致、合适的紧凑间距 */
+    }
+
+    [data-theme="cinema"] .media-btn-circle {
+        width: 32px !important;
+        height: 32px !important;
+    }
+
+    [data-theme="cinema"] .media-btn-circle i {
+        font-size: 16px !important;
+    }
+
+    /* 浮动按钮组 */
+    .floating-btn-group {
+        right: 12px;
+        bottom: 12px;
+        z-index: 999;
+    }
+
+    .floating-btn {
+        min-width: 60px;
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}
+
+/* ============================================
+   明亮模式移动端适配
+   ============================================ */
+@media screen and (max-width: 768px) {
+    :not([data-theme="cinema"]) .sidebar-overlay {
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    :not([data-theme="cinema"]) .sidebar {
+        background: var(--bg-sidebar);
+        border-right-color: var(--border-color);
+    }
+
+    :not([data-theme="cinema"]) .topbar {
+        background: transparent;
+    }
+}
+
+/* ============================================
+   横屏模式优化
+   ============================================ */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+    .topbar {
+        height: 48px;
+    }
+
+    .page-container {
+        padding: 12px 16px;
+    }
+
+    .hero-stats {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+
+    .sidebar {
+        max-width: 240px;
+    }
+}
+
+/* ============================================
+   触摸设备优化
+   ============================================ */
+@media (hover: none) and (pointer: coarse) {
+    .nav-item {
+        min-height: 44px;
+    }
+
+    .nav-item i {
+        font-size: 22px;
+    }
+
+    button {
+        min-height: 44px;
+    }
+
+    .task-card {
+        transition: none;
+    }
+
+    .task-card:active {
+        transform: scale(0.98);
+        opacity: 0.9;
+    }
+
+    .topbar-search {
+        min-height: 44px;
+    }
+
+    .sidebar-toggle:hover,
+    .notification-btn:hover,
+    .theme-toggle-btn:hover {
+        transform: none;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        min-height: 44px;
+    }
+}
+
+/* ============================================
+   安全区域适配（刘海屏、底部横条）
+   ============================================ */
+@supports (padding: env(safe-area-inset-bottom)) {
+    .sidebar-footer {
+        padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    }
+
+    .page-container {
+        padding-bottom: calc(32px + env(safe-area-inset-bottom));
+    }
+
+    @media screen and (max-width: 768px) {
+        .page-container {
+            padding-bottom: calc(16px + env(safe-area-inset-bottom));
+        }
+
+        .notification-dropdown {
+            bottom: calc(20px + env(safe-area-inset-bottom));
+        }
+
+        .form-footer,
+        .modal-footer {
+            padding-bottom: calc(12px + env(safe-area-inset-bottom));
+        }
+    }
+}

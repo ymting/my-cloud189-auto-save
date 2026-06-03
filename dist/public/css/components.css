@@ -1,0 +1,928 @@
+/* 加载动画 */
+.loading {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.loading::after {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-left: 4px;
+    border: 2px solid #fff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* 进度环 */
+.progress-ring {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.progress-ring__circle {
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}
+
+.progress-ring__text {
+    position: absolute;
+    font-size: 8px;
+    color: #666;
+}
+
+/* 视图切换按钮 */
+.view-toggle {
+    position: absolute;
+    right: 20px;
+    top: -40px;
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.view-toggle:hover {
+    color: #1890ff;
+    background: none;
+}
+
+.view-toggle svg {
+    width: 20px;
+    height: 20px;
+}
+
+@media screen and (max-width: 768px) {
+    .view-toggle {
+        display: none;
+    }
+}
+
+/* 动画 */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes dots {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60% { content: '...'; }
+    80%, 100% { content: ''; }
+}
+
+/* 设置表单样式 */
+.form-text {
+    color: #666;
+    font-size: 0.875rem;
+    margin-top: 4px;
+}
+
+/* ========== 卡片式设置样式 ========== */
+.settings-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="cinema"] .settings-card {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 24px rgba(99, 102, 241, 0.08);
+    backdrop-filter: blur(10px);
+}
+
+.settings-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    background: var(--hover-bg);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text-color);
+}
+
+.settings-card-header .card-icon {
+    font-size: 18px;
+    opacity: 0.8;
+}
+
+.settings-card-body {
+    padding: 20px;
+}
+
+/* 设置项容器 */
+.settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* 单个设置项 */
+.settings-item {
+    padding: 16px 20px;
+    background: rgba(99, 102, 241, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+}
+
+.settings-item:last-child {
+    margin-bottom: 0;
+}
+
+.settings-item:hover {
+    background: rgba(99, 102, 241, 0.06);
+    border-color: color-mix(in srgb, #6366f1 40%, var(--border-color));
+}
+
+.settings-item-label {
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-color);
+}
+
+.settings-item-label input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+
+.settings-item-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px 20px;
+    align-items: start;
+}
+
+/* settings-item-content的子div继承grid */
+.settings-item-content > div:not(.settings-row):not(.settings-inline-inputs):not(.settings-checkbox-group) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px 16px;
+    align-items: start;
+}
+
+/* 让特定元素占满整行 */
+.settings-item-content > small.form-text,
+.settings-item-content > .settings-checkbox-group,
+.settings-item-content > .settings-inline-inputs {
+    grid-column: 1 / -1;
+}
+
+/* 子div中的标题占满整行 */
+.settings-item-content > div > div:first-child:not(input):not(select):not(textarea):not(label) {
+    grid-column: 1 / -1;
+}
+
+/* checkbox项占满整行 */
+.settings-item-content > label:has(input[type="checkbox"]) {
+    grid-column: 1 / -1;
+}
+
+/* 子div中的checkbox也占满整行 */
+.settings-item-content > div > label:has(input[type="checkbox"]) {
+    grid-column: 1 / -1;
+}
+
+/* 普通label（不包含checkbox）不占满整行 */
+.settings-item-content > label:not(:has(input[type="checkbox"])) {
+    grid-column: auto;
+}
+
+/* 单独的输入框自动填充 */
+.settings-item-content > input,
+.settings-item-content > select,
+.settings-item-content > textarea,
+.settings-item-content > div > input,
+.settings-item-content > div > select,
+.settings-item-content > div > textarea {
+    width: 100%;
+    max-width: none;
+}
+
+/* settings-row 保持原有行为 */
+.settings-item-content > .settings-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px 16px;
+}
+
+/* settings-row内部的div */
+.settings-row > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* 响应式：超小屏幕1列 */
+@media (max-width: 480px) {
+    .settings-inline-inputs {
+        flex-wrap: wrap;
+    }
+    .settings-inline-inputs button {
+        width: 100%;
+    }
+}
+
+/* 水平排列的 checkbox 组 */
+.settings-checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+}
+
+.settings-checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 0;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+/* 内联输入组 */
+.settings-inline-inputs {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: nowrap;
+    grid-column: 1 / -1;
+    width: 100%;
+}
+
+.settings-inline-inputs input {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+}
+
+.settings-inline-inputs button {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* 帮助文本容器 */
+.settings-help {
+    margin-top: 6px;
+}
+
+.settings-help-toggle {
+    background: #4B4BFA;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 4px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.settings-help-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(75, 75, 250, 0.4);
+}
+
+.settings-help-text {
+    display: none;
+    color: var(--text-secondary, #666);
+    font-size: 0.85rem;
+    margin-top: 8px;
+    padding: 10px;
+    background: var(--help-bg, #f5f5f5);
+    border-radius: 6px;
+    line-height: 1.6;
+}
+
+.settings-help-text.show {
+    display: block;
+}
+
+/* 操作按钮组 */
+.settings-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color, #e0e0e0);
+}
+
+/* 旧样式保留兼容 */
+.push-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.push-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.push-item label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0;
+}
+
+.push-item input[type="checkbox"] {
+    width: auto;
+}
+
+.proxy-settings {
+    display: flex;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 8px;
+}
+
+#settingsForm button {
+    margin-top: 20px;
+}
+
+/* 匹配规则表单样式 */
+.match-rule {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.match-rule input,
+.match-rule select {
+    min-width: 0;  /* 允许 flex 项目收缩 */
+}
+
+@media (max-width: 768px) {
+    .match-rule input,
+    .match-rule select {
+        flex: 1 1 100% !important;  /* 移动端每项占满一行 */
+    }
+}
+
+.form-header {
+    display: flex; 
+    align-items: center; /* 添加这行确保所有元素垂直居中 */
+}
+
+.task-operations {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.task-filter {
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    height: 100%; /* 使用100%继承父元素高度 */
+}
+
+#taskTable tbody tr.selected {
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+#taskTable tbody tr {
+    cursor: pointer;
+}
+
+.search-input {
+    display: flex;
+    gap: 8px;
+    border-radius: 4px;
+    align-items: center;
+}
+
+.search-input select {
+    border-right: 1px solid var(--border-color);
+    padding-right: 15px;
+    width: 100px;
+    flex: none; /* 防止下拉框被拉伸 */
+}
+
+.search-input input {
+    flex: 1;
+    min-width: 100px; /* 确保输入框有最小宽度 */
+}
+
+
+.search-input select:focus,
+.search-input input:focus {
+    outline: none;
+}
+
+
+/* 任务操作区域响应式布局 */
+.task-operations {
+    width: 100%;
+}
+
+.operation-group {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.button-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    display: flex;
+    gap: 8px;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .operation-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .button-group, .search-bar {
+        width: 100%;
+    }
+    
+    .search-input {
+        width: 100%;
+    }
+    
+    .search-input select, 
+    .search-input input {
+        flex: 1;
+    }
+}
+
+
+.delete-cloud-option {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 5px;
+    margin-left: 10px;
+}
+
+.delete-cloud-option input[type="checkbox"] {
+    margin: 0;
+    width: unset;
+}
+
+.delete-cloud-option span {
+    line-height: normal;
+}
+
+@media (max-width: 768px) {
+    .delete-cloud-option {
+        margin-top: 8px;
+    }
+}
+
+
+
+.dropdown-button-group {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-toggle {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+.dropdown-toggle:hover {
+    background-color: var(--hover-color);
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    min-width: 120px;
+    margin-top: 4px;
+}
+
+.dropdown-content a {
+    display: block;
+    padding: 8px 12px;
+    text-decoration: none;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.dropdown-content a:hover {
+    background-color: var(--hover-color);
+}
+
+.dropdown-button-group.active .dropdown-content {
+    display: block;
+}
+
+.dropdown-icon {
+    font-size: 12px;
+    transition: transform 0.2s;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    min-width: 120px;
+    margin-top: 4px;
+}
+
+.dropdown-content button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.dropdown-content button:hover {
+    background-color: var(--hover-color);
+}
+
+.dropdown-button-group.active .dropdown-icon {
+    transform: rotate(180deg);
+}
+
+.dropdown-button-group.active .dropdown-content {
+    display: block;
+}
+
+/* 分享目录样式优化 */
+.share-folders-group {
+    margin-top: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-color);
+}
+
+.share-folders-list {
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 12px;
+    border-radius: 4px;
+}
+
+.folder-select-header {
+    padding: 12px;
+    background: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.folder-select-header input[type="checkbox"],
+.folder-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    margin: 0;
+}
+
+.folder-select-header label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: var(--text-color);
+    cursor: pointer;
+    width: auto;
+}
+
+.folder-item {
+    padding: 0 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.folder-item:hover {
+    background-color: var(--hover-color);
+}
+
+.folder-item label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    cursor: pointer;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.share-folders-list {
+    max-height: 200px;
+    overflow-y: auto;
+    overflow-x: auto;
+    padding: 12px;
+    border-radius: 4px;
+}
+
+#shareFoldersList {
+    min-width: min-content;
+}
+
+.folder-item input[type="checkbox"] {
+    margin: 0;
+    width: 16px;
+    height: 16px;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .share-folders-list {
+        max-height: 150px;
+    }
+
+    .folder-item {
+        padding: 10px 8px;
+    }
+
+    .folder-select-header {
+        padding: 10px 8px;
+    }
+}
+
+
+
+.help-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    border-radius: 50%;
+    background-color: #666;
+    color: white;
+    font-size: 12px;
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+.regex-tooltip {
+    display: none;
+    position: fixed;
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.regex-tooltip table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.regex-tooltip th, .regex-tooltip td {
+    padding: 5px;
+    border: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.regex-tooltip th {
+    background-color: var(--background-color-light);
+}
+@media (max-width: 768px) {
+    .regex-tooltip {
+        position: fixed;
+        width: 90vw;
+        height: auto;
+        border-radius: 12px;
+    }
+    
+    .regex-tooltip table {
+        font-size: 14px;
+    }
+    
+    .regex-tooltip td, .regex-tooltip th {
+        padding: 5px;
+        word-break: break-word;
+    }
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon:hover {
+    opacity: 0.8;
+}
+
+.refresh-icon {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.3s ease;
+    filter: invert(0.5);
+}
+
+.btn-icon:hover .refresh-icon {
+    transform: rotate(180deg);
+}
+
+.help-text-container .form-text {
+    display: none;
+}
+.toggle-help-text {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+
+.toggle-help-text:hover {
+    color: var(--primary-color);
+}
+
+.help-text-container {
+    margin-top: 8px;
+}
+
+#strmModal input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+#strmModal label {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    margin-bottom: 4px;
+    background-color: var(--background-color);
+}
+
+#strmModal span {
+    flex: 1;
+    font-size: 14px;
+}
+
+.default-star {
+    cursor: pointer;
+    color: var(--text-color);
+    font-size: 18px;
+    margin-right: 8px;
+    user-select: none;
+}
+
+.default-star:hover {
+    opacity: 0.8;
+}
+
+.proxy-services-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.proxy-service-item {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    min-width: 80px;
+    margin-right: 10px;
+}
+
+.proxy-service-item input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .proxy-services-container {
+        gap: 10px;
+    }
+    
+    .proxy-service-item {
+        min-width: auto;
+        margin-right: 0;
+        flex: 0 0 calc(50% - 5px); /* 在小屏幕上每行显示两个选项 */
+    }
+}
+
+/* 超小屏幕适配 */
+@media screen and (max-width: 375px) {
+    .proxy-service-item {
+        flex: 0 0 100%; /* 在超小屏幕上每行显示一个选项 */
+    }
+}
+
+/* 1. 固定自定义推送弹窗高度, 超出高度出现滚动条 */
+#customPushManagementModal .modal-body,
+#addEditCustomPushModal .modal-body {
+    max-height: 70vh; /* 您可以根据需要调整这个值，例如 400px, 500px */
+    overflow-y: auto;
+    padding-right: 15px; /* 为滚动条留出空间，避免内容遮挡 */
+}
+
+/* 确保 #addEditCustomPushModal 的 modal-content 也允许内容扩展 */
+#addEditCustomPushModal .modal-content {
+    max-height: 85vh; /* 限制整个模态框内容区域的最大高度 */
+    display: flex;
+    flex-direction: column;
+}
+
+#addEditCustomPushModal .modal-body {
+    flex-grow: 1; /* 让 modal-body 占据剩余空间并可滚动 */
+}
+
+
+/* 2. 动态字段三个表单宽度平均分 (已在JS中通过flex:1实现, 这里是可选的补充样式) */
+.custom-push-field-row select,
+.custom-push-field-row input[type="text"],
+.custom-push-field-row textarea {
+    min-width: 0; /* 允许 flex item 收缩到小于其内容宽度 */
+}
+
+/* 3. 动态字段的删除按钮样式微调 (如果JS中的样式不够) */
+.custom-push-field-row .btn-danger {
+    /* 如果需要更精细的控制，可以在这里添加样式 */
+    /* 例如，确保按钮高度与其他表单元素一致 */
+    align-self: center; /* 如果flex布局导致垂直对齐问题 */
+}
+label[for="customPushEnabled"] {
+    display: flex; /* 使用 flex 布局 */
+    align-items: center; /* 垂直居中对齐内部元素 */
+    flex-direction: row; /* 确保子元素按其在HTML中的顺序排列（即复选框在前，文字在后）*/
+  }
+  
+  label[for="customPushEnabled"] input[type="checkbox"] {
+    margin-right: 6px; 
+    flex: 0;
+  }

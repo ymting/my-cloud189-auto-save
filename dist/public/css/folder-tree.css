@@ -1,0 +1,104 @@
+
+/* 树状目录样式 */
+.folder-tree {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-x: auto;  /* 添加水平滚动 */
+    overflow-y: auto;  /* 添加垂直滚动以防内容过高 */
+    white-space: nowrap;  /* 防止换行 */
+    min-width: 200px;  /* 设置最小宽度 */
+    height: 100%;      /* 填充整个父容器高度，避免内容压缩 */
+    box-sizing: border-box;
+    padding-bottom: 10px; /* 给底部留点距离，防止和滚动条重合 */
+}
+
+.folder-tree-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    display: block;
+    transition: background-color 0.2s;
+    position: relative;
+    min-width: fit-content;  /* 确保内容不会被截断 */
+}
+
+.folder-name {
+    display: inline-block;
+    vertical-align: middle;
+    /* 移除最大宽度限制 */
+    white-space: nowrap;
+}
+
+.folder-tree-item:hover {
+    background-color: var(--hover-bg);
+}
+
+.folder-tree-item.selected {
+    background-color: rgba(99, 102, 241, 0.1);
+}
+
+.folder-icon {
+    display: inline-block;
+    margin-right: 8px;
+    color: var(--primary-color);
+    vertical-align: middle;
+}
+
+.folder-name {
+    display: inline-block;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.expand-icon {
+    display: inline-block;
+    margin-left: 8px;
+    transition: transform 0.2s;
+    vertical-align: middle;
+}
+
+.folder-tree-node.expanded > .folder-tree-item .expand-icon,
+.expanded > .expand-icon {
+    transform: rotate(90deg);
+}
+
+.folder-tree-item {
+    position: relative;
+}
+
+.folder-children {
+    position: relative;
+}
+
+.folder-children::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: #e8e8e8;
+}
+
+.folder-children .folder-tree-item::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    width: 20px;
+    height: 1px;
+    background-color: #e8e8e8;
+}
+
+.folder-children {
+    margin-top: 0;
+    padding-left: 40px;
+    display: none;
+    position: relative;
+    min-width: fit-content;  /* 确保子目录也不会被截断 */
+}
+
+.folder-tree-node.expanded > .folder-children,
+.expanded > .folder-children {
+    display: block;
+}

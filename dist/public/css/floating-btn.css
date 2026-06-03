@@ -1,0 +1,64 @@
+.floating-btn-group {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000;
+}
+
+.floating-btn {
+    min-width: 80px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #4B4BFA;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(75, 75, 250, 0.3);
+    transition: all 0.3s;
+    border: none;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.floating-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(75, 75, 250, 0.4);
+}
+
+.floating-btn img {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1);
+}
+
+
+.floating-btns-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+    transition: all 0.3s ease;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.floating-btns-container.collapsed {
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+    margin: 0;
+    height: 0;
+}
+
+#toggleIcon {
+    transition: transform 0.3s ease;
+}
+
+#toggleIcon.expanded {
+    transform: rotate(180deg);
+}

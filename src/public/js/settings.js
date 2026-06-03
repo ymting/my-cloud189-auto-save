@@ -69,6 +69,7 @@ async function loadSettings() {
             document.getElementById('proxyTmdb').checked = settings.proxy?.services?.tmdb || false;
             document.getElementById('proxyOpenAI').checked = settings.proxy?.services?.openai || false;
             document.getElementById('proxyCloud189').checked = settings.proxy?.services?.cloud189 || false;
+            document.getElementById('proxyHDHive').checked = settings.proxy?.services?.hdhive || false;
             document.getElementById('proxyCustomPush').checked = settings.proxy?.services?.customPush || false;
             // Bark 设置
             document.getElementById('enableBark').checked = settings.bark?.enable || false;
@@ -78,6 +79,7 @@ async function loadSettings() {
             // 账号密码设置
             document.getElementById('systemUserName').value = settings.system?.username || '';
             document.getElementById('systemPassword').value = settings.system?.password || '';
+            document.getElementById('systemBaseUrl').value = settings.system?.baseUrl || '';
             
             const enableStrm = settings.strm?.enable || false
             const enableEmby = settings.emby?.enable || false
@@ -112,6 +114,12 @@ async function loadSettings() {
             document.getElementById('enableAlist').checked = settings.alist?.enable || false;
             document.getElementById('alistServer').value = settings.alist?.baseUrl || '';
             document.getElementById('alistApiKey').value = settings.alist?.apiKey || '';
+
+            // hdhive 影巢
+            document.getElementById('enableHDHive').checked = settings.hdhive?.enabled || false;
+            document.getElementById('hdhiveClientId').value = settings.hdhive?.clientId || '';
+            document.getElementById('hdhiveApiKey').value = settings.hdhive?.apiKey || '';
+            document.getElementById('hdhiveBaseUrl').value = settings.hdhive?.baseUrl || '';
 
             // pushplus
             document.getElementById('enablePushPlus').checked = settings.pushplus?.enable || false;
@@ -191,6 +199,7 @@ async function saveSettings() {
                 tmdb: document.getElementById('proxyTmdb').checked,
                 openai: document.getElementById('proxyOpenAI').checked,
                 cloud189: document.getElementById('proxyCloud189').checked,
+                hdhive: document.getElementById('proxyHDHive').checked,
                 customPush: document.getElementById('proxyCustomPush').checked
             }
         },
@@ -202,6 +211,7 @@ async function saveSettings() {
         system: {
             username: document.getElementById('systemUserName').value,
             password: document.getElementById('systemPassword').value,
+            baseUrl: document.getElementById('systemBaseUrl').value,
             apiKey: document.getElementById('systemApiKey').value
         },
         pushplus: {
@@ -244,6 +254,12 @@ async function saveSettings() {
             baseUrl: document.getElementById('alistServer').value,
             apiKey: document.getElementById('alistApiKey').value
         },
+        hdhive: {
+            enabled: document.getElementById('enableHDHive').checked,
+            clientId: document.getElementById('hdhiveClientId').value,
+            apiKey: document.getElementById('hdhiveApiKey').value,
+            baseUrl: document.getElementById('hdhiveBaseUrl').value || 'https://hdhive.com'
+        },
         customPush: customPushConfigs
     };
     // taskRetryInterval不能少于60秒
@@ -261,6 +277,10 @@ async function saveSettings() {
         const data = await response.json();
         if (data.success) {
             message.success('保存成功');
+            // 刷新影巢按钮显示状态
+            if (typeof initHDHiveFeature === 'function') {
+                initHDHiveFeature();
+            }
         } else {
             message.warning('保存失败: ' + data.error);
         }
