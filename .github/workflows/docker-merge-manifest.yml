@@ -6,13 +6,14 @@ on:
     inputs:
       version:
         description: '输入要合并的镜像版本号'
-        required: true
-        default: '3.0.1'
+        required: false
+        default: ''
   workflow_call:
     inputs:
       version:
-        required: true
+        required: false
         type: string
+        default: ''
 
 env:
   REGISTRY: ghcr.io

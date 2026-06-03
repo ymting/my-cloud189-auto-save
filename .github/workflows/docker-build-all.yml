@@ -29,5 +29,6 @@ jobs:
   merge:
     needs: [build-amd64, build-arm64]
     uses: ./.github/workflows/docker-merge-manifest.yml
+    secrets: inherit
     with:
-      version: ${{ github.event.inputs.version }}
+      version: ${{ github.event.inputs.version || '' }}
