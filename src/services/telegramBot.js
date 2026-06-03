@@ -980,22 +980,20 @@ class TelegramBotService {
         try {
             let folderId = data?.f || '-11';
             if (!this._checkUserId(chatId)) return;
-            if (data?.r) {
-               // 返回上一级目录，从记录的父级ID中获取
+
+            // 记录是否是"返回"操作
+            const isReturning = data?.r;
+
+            if (isReturning) {
+               // 返回上一级目录
                const parentId = Array.from(this.parentFolderIds).pop() || '-11';
                this.parentFolderIds.delete(parentId);
-               const path = this.currentFolderPath.split('/').filter(Boolean);
-               path.pop();
-               path.pop();
-               this.currentFolderPath = path.join('/');
+               const pathParts = this.currentFolderPath.split('/').filter(Boolean);
+               pathParts.pop(); // 只删一级
+               this.currentFolderPath = pathParts.length > 0 ? '/' + pathParts.join('/') : '/';
                folderId = parentId;
-            } else if (folderId !== '-11') {
-                // 非根目录时记录父级ID
-                const folder = this.folders.get(folderId);
-                if (folder?.pId) {
-                    this.parentFolderIds.add(folder.pId);
-                }
             }
+
             const cloud189 = Cloud189Service.getInstance(this.currentAccount);
             const folders = await cloud189.getFolderNodes(folderId);
             if (!folders) {
@@ -1009,19 +1007,39 @@ class TelegramBotService {
             });
             const commonFolderIds = new Set(commonFolders.map(f => f.id));
 
-            // 更新当前ID
+            // 更新当前 ID
             this.currentFolderId = folderId;
 
-            // 处理路径更新
-            if (folderId === '-11') {
-                // 根目录
-                this.currentFolderPath = '/';
-            } else {
-                this.currentFolderPath = path.join(this.currentFolderPath, this.folders.get(folderId).name);
+            // 处理路径更新（仅在非返回操作时更新）
+            if (!isReturning) {
+                if (folderId === '-11') {
+                    // 根目录
+                    this.currentFolderPath = '/';
+                } else if (folders.length > 0 && folders[0].pId) {
+                    // 通过 API 返回的数据重建路径（更可靠）
+                    // 当前目录是 folderId，其子目录列表的第一个元素的 pId 就是当前目录
+                    // 但我们需要当前目录的名称，所以需要从上一次的 folders 中获取
+                    const currentFolder = this.folders.get(folderId);
+                    if (currentFolder && currentFolder.name) {
+                        // 正常更新路径
+                        if (this.currentFolderPath === '/' || this.currentFolderPath === '') {
+                            this.currentFolderPath = '/' + currentFolder.name;
+                        } else {
+                            this.currentFolderPath = this.currentFolderPath + '/' + currentFolder.name;
+                        }
+                    }
+                }
+            }
+
+            // 记录父级 ID（用于返回功能）
+            if (folderId !== '-11' && folders.length > 0 && folders[0].pId) {
+                // 当前目录的父级 ID
+                const parentFolderId = folders[0].pId;
+                this.parentFolderIds.add(parentFolderId);
             }
 
             const keyboard = [];
-            
+
             // 添加文件夹按钮
             for (const folder of folders) {
                 keyboard.push([{
@@ -1031,9 +1049,10 @@ class TelegramBotService {
                         f: folder.id
                     })
                 }]);
-                this.folders.set(folder.id, folder);
+                // 存储文件夹信息（包括父级 ID）
+                this.folders.set(folder.id, { ...folder, pId: folder.pId || folderId });
             }
-            
+
             // 添加操作按钮
             keyboard.push([
                 {
@@ -1050,7 +1069,7 @@ class TelegramBotService {
                 }] : []),
                 {
                     text: '✅ 确认',
-                    callback_data: JSON.stringify({ 
+                    callback_data: JSON.stringify({
                         t: 'fs',
                         f: folderId
                     })
