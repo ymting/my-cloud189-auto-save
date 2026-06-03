@@ -117,8 +117,12 @@ class ConfigService {
             },
             hdhive: {
                 enabled: false,
-                apiKey: '',
-                baseUrl: 'https://hdhive.com'
+                clientId: '', // OpenAPI 应用公开 ID (client_id)
+                apiKey: '', // OpenAPI 应用 Secret (X-API-Key)
+                baseUrl: 'https://hdhive.com',
+                accessToken: '', // 用户授权 Access Token
+                refreshToken: '', // 刷新 Token
+                tokenExpiresAt: null // Token 过期时间戳
             },
             customPush: [] // 自定义推送
         };

@@ -986,10 +986,13 @@
                                 </div>
                                 <div class="settings-item-content">
                                     <div class="settings-row">
-                                        <input type="text" id="hdhiveApiKey" placeholder="影巢 API Key">
-                                        <input type="text" id="hdhiveBaseUrl" placeholder="API地址 (默认: https://api.hdhive.com)">
+                                        <input type="text" id="hdhiveClientId" placeholder="Client ID (应用公开ID)">
+                                        <input type="text" id="hdhiveApiKey" placeholder="API Key (应用Secret)">
                                     </div>
-                                    <small class="form-text">在影巢个人中心获取 API Key，仅显示天翼云盘资源，支持积分解锁与一键转存</small>
+                                    <div class="settings-row">
+                                        <input type="text" id="hdhiveBaseUrl" placeholder="API地址 (默认: https://hdhive.com)">
+                                    </div>
+                                    <small class="form-text">在影巢创建 OpenAPI 应用获取 Client ID 和 Secret，支持 OAuth 用户授权、资源查询与解锁</small>
                                 </div>
                             </div>
                             <div class="settings-item">
@@ -1307,6 +1310,11 @@
     <div class="modal-content hdhive-modal-content">
         <div class="modal-header hdhive-header">
             <h3>🎬 影巢资源搜索</h3>
+            <div class="hdhive-auth-info">
+                <span id="hdhiveAuthStatus" style="margin-right: 8px;"></span>
+                <button id="hdhiveAuthBtn" onclick="startHDHiveOAuth()" style="display: none; padding: 4px 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">OAuth 授权</button>
+                <button id="hdhiveRevokeBtn" onclick="revokeHDHiveAuth()" style="display: none; padding: 4px 12px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">撤销授权</button>
+            </div>
             <div class="hdhive-quota" id="hdhiveQuota" style="display: none;">
                 <span class="quota-label">积分:</span>
                 <span class="quota-value" id="hdhivePoints">--</span>

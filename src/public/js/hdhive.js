@@ -1,5 +1,6 @@
 /**
  * 影巢 (HDHive) 资源搜索前端逻辑
+ * 支持 OAuth 用户授权
  */
 
 // 状态管理
@@ -10,12 +11,12 @@ let hdhiveState = {
     resources: [],           // 当前资源列表
     selectedResource: null,  // 选中的资源（用于解锁）
     unlockedData: null,      // 解锁后的数据
-    config: null             // 影巢配置
+    config: null,            // 影巢配置
+    authStatus: null         // 授权状态
 };
 
 /**
  * 初始化影巢功能（页面加载时调用）
- * 根据配置显示/隐藏影巢入口按钮
  */
 async function initHDHiveFeature() {
     try {
@@ -54,6 +55,9 @@ async function openHDHiveModal() {
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
+    // 检查授权状态
+    await checkHDHiveAuthStatus();
+
     // 加载积分信息
     loadHDHiveQuota();
 
@@ -67,22 +71,154 @@ async function openHDHiveModal() {
 function closeHDHiveModal() {
     const modal = document.getElementById('hdhiveModal');
     modal.style.display = 'none';
-    document.body.style.overflow = '';
+    document.body.overflow = '';
+}
+
+/**
+ * 检查授权状态
+ */
+async function checkHDHiveAuthStatus() {
+    try {
+        const response = await fetch('/api/hdhive/auth/status');
+        const data = await response.json();
+
+        if (data.success) {
+            hdhiveState.authStatus = data.data;
+            updateAuthUI();
+        }
+    } catch (error) {
+        console.error('检查授权状态失败:', error);
+    }
+}
+
+/**
+ * 更新授权状态 UI
+ */
+function updateAuthUI() {
+    const statusEl = document.getElementById('hdhiveAuthStatus');
+    const authBtn = document.getElementById('hdhiveAuthBtn');
+    const revokeBtn = document.getElementById('hdhiveRevokeBtn');
+
+    if (!statusEl || !authBtn) return;
+
+    const status = hdhiveState.authStatus;
+
+    if (status?.needsOAuth) {
+        // 需要授权
+        statusEl.innerHTML = '<span style="color: #e74c3c;">⚠️ 未授权</span>';
+        authBtn.style.display = 'inline-block';
+        authBtn.textContent = 'OAuth 授权';
+        if (revokeBtn) revokeBtn.style.display = 'none';
+    } else if (status?.isAuthorized) {
+        // 已授权
+        const expiresAt = status.tokenExpiresAt;
+        const expiresText = expiresAt ? `，有效期至 ${new Date(expiresAt).toLocaleString()}` : '';
+        statusEl.innerHTML = `<span style="color: #27ae60;">✅ 已授权${expiresText}</span>`;
+        authBtn.style.display = 'none';
+        if (revokeBtn) revokeBtn.style.display = 'inline-block';
+    } else {
+        // 无需 OAuth（可能是旧版 API Key）
+        statusEl.innerHTML = '<span style="color: #27ae60;">✅ 已配置</span>';
+        authBtn.style.display = 'none';
+        if (revokeBtn) revokeBtn.style.display = 'none';
+    }
+}
+
+/**
+ * 发起 OAuth 授权
+ */
+async function startHDHiveOAuth() {
+    try {
+        // 获取系统基础 URL
+        const settingsResponse = await fetch('/api/settings');
+        const settingsData = await settingsResponse.json();
+        const baseUrl = settingsData.data?.system?.baseUrl || '';
+
+        if (!baseUrl) {
+            message.error('请先在系统设置中配置基础 URL（系统对外访问地址）');
+            return;
+        }
+
+        const redirectUri = `${baseUrl}/api/hdhive/oauth/callback`;
+
+        // 获取授权 URL
+        const response = await fetch(`/api/hdhive/oauth/url?redirect_uri=${encodeURIComponent(redirectUri)}`);
+        const data = await response.json();
+
+        if (data.success && data.data?.url) {
+            // 打开授权窗口
+            const width = 600;
+            const height = 700;
+            const left = (window.innerWidth - width) / 2;
+            const top = (window.innerHeight - height) / 2;
+
+            const authWindow = window.open(
+                data.data.url,
+                'hdhive_oauth',
+                `width=${width},height=${height},left=${left},top=${top}`
+            );
+
+            // 监听授权成功消息
+            window.addEventListener('message', function handler(e) {
+                if (e.data?.type === 'hdhive_oauth_success') {
+                    window.removeEventListener('message', handler);
+                    message.success('授权成功');
+                    checkHDHiveAuthStatus();
+                    loadHDHiveQuota();
+                }
+            });
+
+            // 轮询检查窗口是否关闭
+            const checkClosed = setInterval(() => {
+                if (authWindow?.closed) {
+                    clearInterval(checkClosed);
+                    // 刷新授权状态
+                    checkHDHiveAuthStatus();
+                }
+            }, 1000);
+        } else {
+            message.error(data.error || '获取授权链接失败');
+        }
+    } catch (error) {
+        console.error('发起 OAuth 授权失败:', error);
+        message.error('发起授权失败: ' + error.message);
+    }
+}
+
+/**
+ * 撤销授权
+ */
+async function revokeHDHiveAuth() {
+    if (!confirm('确定要撤销影巢授权吗？撤销后需要重新授权才能使用资源查询和解锁功能。')) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/hdhive/oauth/revoke', { method: 'POST' });
+        const data = await response.json();
+
+        if (data.success) {
+            message.success('授权已撤销');
+            checkHDHiveAuthStatus();
+        } else {
+            message.error(data.error || '撤销失败');
+        }
+    } catch (error) {
+        console.error('撤销授权失败:', error);
+        message.error('撤销失败: ' + error.message);
+    }
 }
 
 /**
  * 重置影巢状态
  */
 function resetHDHiveState() {
-    hdhiveState = {
-        currentMedia: null,
-        currentType: null,
-        currentTmdbId: null,
-        resources: [],
-        currentCloudFilter: 'all',
-        selectedResource: null,
-        unlockedData: null
-    };
+    hdhiveState.currentMedia = null;
+    hdhiveState.currentType = null;
+    hdhiveState.currentTmdbId = null;
+    hdhiveState.resources = [];
+    hdhiveState.selectedResource = null;
+    hdhiveState.unlockedData = null;
 
     // 重置 UI
     document.getElementById('hdhiveSearchInput').value = '';
@@ -253,6 +389,21 @@ async function loadHDHiveResources() {
         );
         const data = await response.json();
 
+        // 检查是否需要 OAuth 授权
+        if (data.needsOAuth) {
+            listEl.innerHTML = `
+                <div class="hdhive-empty">
+                    <div class="hdhive-empty-icon">🔐</div>
+                    <p>需要 OAuth 授权</p>
+                    <small>${data.error || '请先进行 OAuth 授权'}</small>
+                    <button class="hdhive-auth-btn" onclick="startHDHiveOAuth()" style="margin-top: 16px; padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        前往授权
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
         if (data.success && data.data) {
             // 只过滤天翼云盘资源
             hdhiveState.resources = data.data.filter(r => r.cloudType === 'cloud189');
@@ -321,7 +472,7 @@ function createResourceItemHTML(resource) {
     const unlockBtnText = resource.expired ? '已失效' : (resource.isFree ? '免费解锁' : '解锁');
 
     return `
-        <div class="hdhive-resource-item ${expiredClass}" onclick="showUnlockConfirm('${resource.id}')">
+        <div class="hdhive-resource-item ${expiredClass}" onclick="showUnlockConfirm('${resource.slug || resource.id}')">
             <div class="hdhive-resource-icon" data-cloud="cloud189">
                 天翼
             </div>
@@ -329,7 +480,7 @@ function createResourceItemHTML(resource) {
                 <div class="hdhive-resource-title" title="${resource.title}">${resource.title}</div>
                 <div class="hdhive-resource-meta">
                     <span>📦 ${resource.sizeFormatted}</span>
-                    ${resource.uploader?.name ? `<span>👤 ${resource.uploader.name}</span>` : ''}
+                    ${resource.uploader?.username ? `<span>👤 ${resource.uploader.username}</span>` : ''}
                 </div>
                 <div class="hdhive-resource-tags">
                     ${pointsTag}
@@ -338,7 +489,7 @@ function createResourceItemHTML(resource) {
                 </div>
             </div>
             <div class="hdhive-resource-actions">
-                <button class="hdhive-unlock-btn" ${unlockBtnDisabled} onclick="event.stopPropagation(); showUnlockConfirm('${resource.id}')">
+                <button class="hdhive-unlock-btn" ${unlockBtnDisabled} onclick="event.stopPropagation(); showUnlockConfirm('${resource.slug || resource.id}')">
                     ${unlockBtnText}
                 </button>
             </div>
@@ -357,8 +508,8 @@ function backToTMDBResults() {
 /**
  * 显示解锁确认弹窗
  */
-function showUnlockConfirm(resourceId) {
-    const resource = hdhiveState.resources.find(r => r.id === resourceId);
+function showUnlockConfirm(resourceSlug) {
+    const resource = hdhiveState.resources.find(r => (r.slug || r.id) === resourceSlug);
     if (!resource) return;
 
     if (resource.expired) {
@@ -407,10 +558,18 @@ async function confirmUnlock() {
         const response = await fetch('/api/hdhive/unlock', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ resourceId: resource.id })
+            body: JSON.stringify({ slug: resource.slug || resource.id })
         });
 
         const data = await response.json();
+
+        // 检查是否需要 OAuth 授权
+        if (data.needsOAuth) {
+            closeHDHiveUnlockModal();
+            message.warning(data.error || '需要 OAuth 授权');
+            startHDHiveOAuth();
+            return;
+        }
 
         if (data.success && data.data) {
             hdhiveState.unlockedData = data.data;
@@ -437,7 +596,7 @@ async function confirmUnlock() {
  * 显示解锁成功弹窗
  */
 function showUnlockSuccess(data) {
-    document.getElementById('hdhiveUnlockedLink').value = data.link;
+    document.getElementById('hdhiveUnlockedLink').value = data.link || data.fullUrl || '';
 
     const codeBox = document.getElementById('hdhiveCodeBox');
     const codeInput = document.getElementById('hdhiveUnlockedCode');
@@ -488,7 +647,7 @@ function copyHDHiveCode() {
  */
 function createTaskFromHDHive() {
     const data = hdhiveState.unlockedData;
-    if (!data || !data.link) {
+    if (!data || !(data.link || data.fullUrl)) {
         message.error('无法获取解锁链接');
         return;
     }
@@ -504,7 +663,7 @@ function createTaskFromHDHive() {
     setTimeout(() => {
         const linkInput = document.getElementById('taskLink');
         if (linkInput) {
-            linkInput.value = data.link;
+            linkInput.value = data.link || data.fullUrl;
             // 触发解析
             if (typeof parseTaskLink === 'function') {
                 parseTaskLink();

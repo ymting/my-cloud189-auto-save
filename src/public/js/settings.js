@@ -116,6 +116,7 @@ async function loadSettings() {
 
             // hdhive 影巢
             document.getElementById('enableHDHive').checked = settings.hdhive?.enabled || false;
+            document.getElementById('hdhiveClientId').value = settings.hdhive?.clientId || '';
             document.getElementById('hdhiveApiKey').value = settings.hdhive?.apiKey || '';
             document.getElementById('hdhiveBaseUrl').value = settings.hdhive?.baseUrl || '';
 
@@ -253,8 +254,9 @@ async function saveSettings() {
         },
         hdhive: {
             enabled: document.getElementById('enableHDHive').checked,
+            clientId: document.getElementById('hdhiveClientId').value,
             apiKey: document.getElementById('hdhiveApiKey').value,
-            baseUrl: document.getElementById('hdhiveBaseUrl').value || 'https://api.hdhive.com'
+            baseUrl: document.getElementById('hdhiveBaseUrl').value || 'https://hdhive.com'
         },
         customPush: customPushConfigs
     };
