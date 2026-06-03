@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 let customPushConfigs = [];
 function loadSettings() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69;
         try {
             const response = yield fetch('/api/settings');
             const data = yield response.json();
@@ -118,23 +118,13 @@ function loadSettings() {
                 document.getElementById('enableHDHive').checked = ((_61 = settings.hdhive) === null || _61 === void 0 ? void 0 : _61.enabled) || false;
                 document.getElementById('hdhiveApiKey').value = ((_62 = settings.hdhive) === null || _62 === void 0 ? void 0 : _62.apiKey) || '';
                 document.getElementById('hdhiveBaseUrl').value = ((_63 = settings.hdhive) === null || _63 === void 0 ? void 0 : _63.baseUrl) || '';
-                // 网盘过滤配置
-                const cloudFilter = ((_64 = settings.hdhive) === null || _64 === void 0 ? void 0 : _64.cloudFilter) || {};
-                document.getElementById('hdhiveCloud115').checked = cloudFilter['115'] !== false;
-                document.getElementById('hdhiveCloudQuark').checked = cloudFilter['quark'] !== false;
-                document.getElementById('hdhiveCloudAli').checked = cloudFilter['ali'] !== false;
-                document.getElementById('hdhiveCloudBaidu').checked = cloudFilter['baidu'] !== false;
-                document.getElementById('hdhiveCloud123').checked = cloudFilter['123'] !== false;
-                document.getElementById('hdhiveCloudXunlei').checked = cloudFilter['xunlei'] === true;
-                document.getElementById('hdhiveCloudPikpak').checked = cloudFilter['pikpak'] === true;
-                document.getElementById('hdhiveCloud189').checked = cloudFilter['cloud189'] !== false;
                 // pushplus
-                document.getElementById('enablePushPlus').checked = ((_65 = settings.pushplus) === null || _65 === void 0 ? void 0 : _65.enable) || false;
-                document.getElementById('pushplusToken').value = ((_66 = settings.pushplus) === null || _66 === void 0 ? void 0 : _66.token) || '';
-                document.getElementById('pushplusTopic').value = ((_67 = settings.pushplus) === null || _67 === void 0 ? void 0 : _67.topic) || '';
-                document.getElementById('pushplusChannel').value = ((_68 = settings.pushplus) === null || _68 === void 0 ? void 0 : _68.channel) || '';
-                document.getElementById('pushplusWebhook').value = ((_69 = settings.pushplus) === null || _69 === void 0 ? void 0 : _69.webhook) || '';
-                document.getElementById('pushplusTo').value = ((_70 = settings.pushplus) === null || _70 === void 0 ? void 0 : _70.to) || '';
+                document.getElementById('enablePushPlus').checked = ((_64 = settings.pushplus) === null || _64 === void 0 ? void 0 : _64.enable) || false;
+                document.getElementById('pushplusToken').value = ((_65 = settings.pushplus) === null || _65 === void 0 ? void 0 : _65.token) || '';
+                document.getElementById('pushplusTopic').value = ((_66 = settings.pushplus) === null || _66 === void 0 ? void 0 : _66.topic) || '';
+                document.getElementById('pushplusChannel').value = ((_67 = settings.pushplus) === null || _67 === void 0 ? void 0 : _67.channel) || '';
+                document.getElementById('pushplusWebhook').value = ((_68 = settings.pushplus) === null || _68 === void 0 ? void 0 : _68.webhook) || '';
+                document.getElementById('pushplusTo').value = ((_69 = settings.pushplus) === null || _69 === void 0 ? void 0 : _69.to) || '';
                 customPushConfigs = settings.customPush || [];
             }
         }
@@ -263,17 +253,7 @@ function saveSettings() {
             hdhive: {
                 enabled: document.getElementById('enableHDHive').checked,
                 apiKey: document.getElementById('hdhiveApiKey').value,
-                baseUrl: document.getElementById('hdhiveBaseUrl').value || 'https://api.hdhive.com',
-                cloudFilter: {
-                    '115': document.getElementById('hdhiveCloud115').checked,
-                    'quark': document.getElementById('hdhiveCloudQuark').checked,
-                    'ali': document.getElementById('hdhiveCloudAli').checked,
-                    'baidu': document.getElementById('hdhiveCloudBaidu').checked,
-                    '123': document.getElementById('hdhiveCloud123').checked,
-                    'xunlei': document.getElementById('hdhiveCloudXunlei').checked,
-                    'pikpak': document.getElementById('hdhiveCloudPikpak').checked,
-                    'cloud189': document.getElementById('hdhiveCloud189').checked
-                }
+                baseUrl: document.getElementById('hdhiveBaseUrl').value || 'https://api.hdhive.com'
             },
             customPush: customPushConfigs
         };

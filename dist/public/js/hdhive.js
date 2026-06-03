@@ -17,33 +17,9 @@ let hdhiveState = {
     currentType: null, // 当前影视类型 (movie/tv)
     currentTmdbId: null, // 当前 TMDB ID
     resources: [], // 当前资源列表
-    currentCloudFilter: 'all', // 当前网盘过滤
     selectedResource: null, // 选中的资源（用于解锁）
     unlockedData: null, // 解锁后的数据
-    cloudFilter: null, // 网盘过滤配置（从服务器加载）
-    config: null // 影巢完整配置
-};
-// 云盘图标映射
-const CLOUD_ICONS = {
-    '115': '1️⃣1️⃣5️⃣',
-    'quark': '夸克',
-    'ali': '阿里',
-    'baidu': '百度',
-    '123': '123',
-    'xunlei': '迅雷',
-    'pikpak': 'PikPak',
-    'cloud189': '天翼'
-};
-// 默认网盘过滤配置
-const DEFAULT_CLOUD_FILTER = {
-    '115': true,
-    'quark': true,
-    'ali': true,
-    'baidu': true,
-    '123': true,
-    'xunlei': false,
-    'pikpak': false,
-    'cloud189': true
+    config: null // 影巢配置
 };
 /**
  * 初始化影巢功能（页面加载时调用）
@@ -67,13 +43,6 @@ function initHDHiveFeature() {
                     if (hdhiveBtn)
                         hdhiveBtn.style.display = 'none';
                 }
-                // 设置网盘过滤配置
-                if (hdhiveState.config.cloudFilter) {
-                    hdhiveState.cloudFilter = hdhiveState.config.cloudFilter;
-                }
-                else {
-                    hdhiveState.cloudFilter = DEFAULT_CLOUD_FILTER;
-                }
             }
         }
         catch (error) {
@@ -81,29 +50,6 @@ function initHDHiveFeature() {
             const hdhiveBtn = document.querySelector('.hdhive-btn');
             if (hdhiveBtn)
                 hdhiveBtn.style.display = 'none';
-        }
-    });
-}
-/**
- * 获取网盘过滤配置
- */
-function loadCloudFilterConfig() {
-    return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b;
-        try {
-            const response = yield fetch('/api/settings');
-            const data = yield response.json();
-            if (data.success && ((_b = (_a = data.data) === null || _a === void 0 ? void 0 : _a.hdhive) === null || _b === void 0 ? void 0 : _b.cloudFilter)) {
-                hdhiveState.cloudFilter = data.data.hdhive.cloudFilter;
-                hdhiveState.config = data.data.hdhive;
-            }
-            else {
-                hdhiveState.cloudFilter = DEFAULT_CLOUD_FILTER;
-            }
-        }
-        catch (error) {
-            console.error('加载网盘过滤配置失败:', error);
-            hdhiveState.cloudFilter = DEFAULT_CLOUD_FILTER;
         }
     });
 }
@@ -121,8 +67,6 @@ function openHDHiveModal() {
         const modal = document.getElementById('hdhiveModal');
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
-        // 加载网盘过滤配置
-        yield loadCloudFilterConfig();
         // 加载积分信息
         loadHDHiveQuota();
         // 重置状态
@@ -307,16 +251,16 @@ function loadHDHiveResources() {
             const response = yield fetch(`/api/hdhive/resources?type=${hdhiveState.currentType}&tmdbId=${hdhiveState.currentTmdbId}`);
             const data = yield response.json();
             if (data.success && data.data) {
-                hdhiveState.resources = data.data;
-                renderResourceTabs();
+                // 只过滤天翼云盘资源
+                hdhiveState.resources = data.data.filter(r => r.cloudType === 'cloud189');
                 renderResourceList();
             }
             else {
                 listEl.innerHTML = `
                 <div class="hdhive-empty">
                     <div class="hdhive-empty-icon">📭</div>
-                    <p>暂无资源</p>
-                    <small>${data.error || '该影视暂无可用资源'}</small>
+                    <p>暂无天翼云盘资源</p>
+                    <small>${data.error || '该影视暂无天翼云盘资源'}</small>
                 </div>
             `;
             }
@@ -334,85 +278,17 @@ function loadHDHiveResources() {
     });
 }
 /**
- * 渲染网盘分类 Tab
- */
-function renderResourceTabs() {
-    const tabsContainer = document.getElementById('hdhiveTabs');
-    const resources = hdhiveState.resources;
-    const cloudFilter = hdhiveState.cloudFilter || DEFAULT_CLOUD_FILTER;
-    // 定义所有支持的网盘类型
-    const cloudTypes = [
-        { key: '115', name: '115' },
-        { key: 'quark', name: '夸克' },
-        { key: 'ali', name: '阿里' },
-        { key: 'baidu', name: '百度' },
-        { key: '123', name: '123' },
-        { key: 'xunlei', name: '迅雷' },
-        { key: 'pikpak', name: 'PikPak' },
-        { key: 'cloud189', name: '天翼' }
-    ];
-    // 统计各网盘数量
-    const counts = { all: 0 };
-    cloudTypes.forEach(c => counts[c.key] = 0);
-    resources.forEach(r => {
-        const cloud = r.cloudType;
-        // 只统计启用的网盘类型
-        if (cloudFilter[cloud] !== false && counts[cloud] !== undefined) {
-            counts[cloud]++;
-            counts.all++;
-        }
-    });
-    // 生成 Tab HTML
-    let tabsHtml = `
-        <button class="hdhive-tab ${hdhiveState.currentCloudFilter === 'all' ? 'active' : ''}"
-                data-cloud="all" onclick="filterByCloud('all')">
-            全部<span class="count">${counts.all}</span>
-        </button>
-    `;
-    // 根据配置生成各网盘 Tab
-    cloudTypes.forEach(({ key, name }) => {
-        // 只显示配置启用的网盘类型
-        if (cloudFilter[key] !== false) {
-            tabsHtml += `
-                <button class="hdhive-tab ${hdhiveState.currentCloudFilter === key ? 'active' : ''}"
-                        data-cloud="${key}" onclick="filterByCloud('${key}')"
-                        ${counts[key] === 0 ? 'disabled' : ''}>
-                    ${name}<span class="count">${counts[key]}</span>
-                </button>
-            `;
-        }
-    });
-    tabsContainer.innerHTML = tabsHtml;
-}
-/**
- * 按网盘类型过滤
- */
-function filterByCloud(cloudType) {
-    hdhiveState.currentCloudFilter = cloudType;
-    // 更新 Tab 激活状态
-    document.querySelectorAll('.hdhive-tab').forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.cloud === cloudType);
-    });
-    renderResourceList();
-}
-/**
  * 渲染资源列表
  */
 function renderResourceList() {
     const listEl = document.getElementById('hdhiveResourceList');
-    const cloudFilter = hdhiveState.cloudFilter || DEFAULT_CLOUD_FILTER;
-    let resources = hdhiveState.resources;
-    // 先过滤掉配置禁用的网盘类型
-    resources = resources.filter(r => cloudFilter[r.cloudType] !== false);
-    // 按网盘过滤
-    if (hdhiveState.currentCloudFilter !== 'all') {
-        resources = resources.filter(r => r.cloudType === hdhiveState.currentCloudFilter);
-    }
+    const resources = hdhiveState.resources;
     if (resources.length === 0) {
         listEl.innerHTML = `
             <div class="hdhive-empty">
                 <div class="hdhive-empty-icon">📭</div>
-                <p>暂无该网盘资源</p>
+                <p>暂无天翼云盘资源</p>
+                <small>该影视暂无天翼云盘资源</small>
             </div>
         `;
         return;
@@ -439,8 +315,8 @@ function createResourceItemHTML(resource) {
     const unlockBtnText = resource.expired ? '已失效' : (resource.isFree ? '免费解锁' : '解锁');
     return `
         <div class="hdhive-resource-item ${expiredClass}" onclick="showUnlockConfirm('${resource.id}')">
-            <div class="hdhive-resource-icon" data-cloud="${resource.cloudType}">
-                ${CLOUD_ICONS[resource.cloudType] || resource.cloudTypeName}
+            <div class="hdhive-resource-icon" data-cloud="cloud189">
+                天翼
             </div>
             <div class="hdhive-resource-content">
                 <div class="hdhive-resource-title" title="${resource.title}">${resource.title}</div>

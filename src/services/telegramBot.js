@@ -1089,7 +1089,8 @@ class TelegramBotService {
                 }
             });
             if (existingFavorite) {
-                await this.bot.editMessageText(`${data.p || '根目录'} 已经是常用目录`, {
+                // 使用已存在的常用目录路径显示，而非 data.p（从未设置）
+                await this.bot.editMessageText(`「${existingFavorite.path}」已经是常用目录，无需重复添加`, {
                     chat_id: chatId,
                     message_id: messageId
                 });

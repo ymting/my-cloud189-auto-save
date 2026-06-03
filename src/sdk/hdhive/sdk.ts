@@ -231,8 +231,14 @@ class HDHiveSDK {
 
       return { success: true, data: normalizedResources };
     } catch (error: any) {
-      logTaskEvent(`影巢资源查询失败: ${error.message}`);
-      return { success: false, error: error.message };
+      const errorDetail = error.code ? `[${error.code}] ` : '';
+      logTaskEvent(`影巢资源查询失败: ${errorDetail}${error.message}`);
+      // 返回更详细的错误信息，帮助用户排查
+      let errorMessage = error.message;
+      if (error.code === 'ECONNRESET' || error.message?.includes('TLS') || error.message?.includes('socket disconnected')) {
+        errorMessage = '网络连接异常，请检查：1) 影巢代理是否正常 2) 网络是否稳定 3) 影巢服务是否可用';
+      }
+      return { success: false, error: errorMessage };
     }
   }
 

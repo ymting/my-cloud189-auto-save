@@ -1,5 +1,5 @@
 import { Got } from 'got';
-import { UserSignResponse, UserSizeInfoResponse, FamilyListResponse, FamilyUserSignResponse, ConfigurationOptions, ClientSession, PageQuery, FileListResponse, RsaKey, UploadInitResponse, UploadCommitResponse, CreateFolderRequest, UploadCallbacks, RenameFolderRequest, CreateBatchTaskRequest, CreateFamilyBatchTaskRequest, CreateFamilyFolderRequest, RenameFamilyFolderRequest, CommitMultiFamilyUploadRequest, CommitMultiUploadRequest, initMultiUploadRequest, initMultiFamilyUploadRequest } from './types';
+import { UserSizeInfoResponse, FamilyListResponse, FamilyUserSignResponse, ConfigurationOptions, ClientSession, PageQuery, FileListResponse, RsaKey, UploadInitResponse, UploadCommitResponse, CreateFolderRequest, UploadCallbacks, RenameFolderRequest, CreateBatchTaskRequest, CreateFamilyBatchTaskRequest, CreateFamilyFolderRequest, RenameFamilyFolderRequest, CommitMultiFamilyUploadRequest, CommitMultiUploadRequest, initMultiUploadRequest, initMultiFamilyUploadRequest } from './types';
 import { CloudAuthClient } from './CloudAuthClient';
 import { Store } from './store';
 /**
@@ -47,10 +47,10 @@ export declare class CloudClient {
      */
     getUserSizeInfo(): Promise<UserSizeInfoResponse>;
     /**
-     * 个人签到任务
+     * 个人签到任务（2025/2026最新接口，包含每日空间签到和相册签到）
      * @returns 签到结果
      */
-    userSign(): Promise<UserSignResponse>;
+    userSign(): Promise<any>;
     /**
      * 获取家庭信息
      * @returns 家庭列表信息

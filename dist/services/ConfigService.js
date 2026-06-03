@@ -118,18 +118,7 @@ class ConfigService {
             hdhive: {
                 enabled: false,
                 apiKey: '',
-                baseUrl: 'https://api.hdhive.com',
-                // 网盘类型过滤配置（默认全部启用）
-                cloudFilter: {
-                    '115': true,
-                    'quark': true,
-                    'ali': true,
-                    'baidu': true,
-                    '123': true,
-                    'xunlei': false,
-                    'pikpak': false,
-                    'cloud189': true
-                }
+                baseUrl: 'https://api.hdhive.com'
             },
             customPush: [] // 自定义推送
         };

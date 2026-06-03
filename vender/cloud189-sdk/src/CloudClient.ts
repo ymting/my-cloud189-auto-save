@@ -352,17 +352,47 @@ export class CloudClient {
    */
   async userSign(): Promise<any> {
     try {
+      // 获取 sessionKey 用于 SSO 登录
+      const sessionKey = await this.getSessionKey()
+
+      // SSO 登录获取 COOKIE_LOGIN_USER cookie（签到接口必需）
+      const ssoLoginUrl = `https://m.cloud.189.cn/ssoLoginMerge.action?sessionKey=${sessionKey}&appName=com.cn21.ecloud&redirectUrl=https://m.cloud.189.cn/zhuanti/2016/sign/index.jsp`
+      await this.request.get(ssoLoginUrl).text().catch(() => {}) // 忽略错误，主要是为了设置 cookie
+
+      // 构建签到请求头
+      const signHeaders = {
+        'X-Requested-With': 'com.cn21.ecloud',
+        'Referer': 'https://m.cloud.189.cn/zhuanti/2016/sign/index.jsp'
+      }
+
       // 1. 每日个人空间签到与抽奖
       const res1 = await this.request
-        .get(`https://m.cloud.189.cn/v2/drawPrizeMarketDetails.action?taskId=TASK_SIGNIN`)
+        .get(`https://m.cloud.189.cn/v2/drawPrizeMarketDetails.action`, {
+          searchParams: {
+            activityId: 'ACT_SIGNIN',
+            taskId: 'TASK_SIGNIN',
+            noCache: Date.now()
+          },
+          headers: signHeaders
+        })
         .json<any>()
-      
+
       // 2. 每日相册备份签到与抽奖
       const res2 = await this.request
-        .get(`https://m.cloud.189.cn/v2/drawPrizeMarketDetails.action?taskId=TASK_SIGNIN_PHOTOS`)
+        .get(`https://m.cloud.189.cn/v2/drawPrizeMarketDetails.action`, {
+          searchParams: {
+            activityId: 'ACT_SIGNIN',
+            taskId: 'TASK_SIGNIN_PHOTOS',
+            noCache: Date.now()
+          },
+          headers: {
+            ...signHeaders,
+            'Referer': 'https://m.cloud.189.cn/zhuanti/2016/sign/index1.jsp'
+          }
+        })
         .json<any>()
-      
-      // 提取抽奖获得的空间大小（例如从“50M空间”中提取 50）
+
+      // 提取抽奖获得的空间大小（例如从”50M空间”中提取 50）
       const getSpace = (res: any) => {
         if (res && res.prizeName) {
           const match = res.prizeName.match(/(\d+)\s*(M|G)B?/i)
@@ -384,13 +414,13 @@ export class CloudClient {
       }
 
       // 判断今日是否已经签到过（如果两个接口均返回已抽过奖，或者不含活动ID，则视作已签到）
-      const isSign = (res1?.errorCode === 'UserSignDrawRepeat' || !res1?.activityId) && 
+      const isSign = (res1?.errorCode === 'UserSignDrawRepeat' || !res1?.activityId) &&
                      (res2?.errorCode === 'UserSignDrawRepeat' || !res2?.activityId)
 
       // 累计本次签到获得的奖励大小
       const bonus1 = getSpace(res1)
       const bonus2 = getSpace(res2)
-      
+
       return {
         isSign,
         netdiskBonus: bonus1 + bonus2,
