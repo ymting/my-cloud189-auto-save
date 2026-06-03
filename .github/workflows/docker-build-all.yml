@@ -1,0 +1,35 @@
+name: Build Docker Images (Full Pipeline)
+
+# 协调工作流：并行构建 amd64 和 arm64，然后合并 manifest
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '输入要构建的镜像版本号'
+        required: true
+        default: '1.0.0'
+      push_latest:
+        description: '是否同时更新 latest 标签'
+        required: true
+        default: 'true'
+        type: boolean
+
+jobs:
+  # 并行构建两个架构
+  build-amd64:
+    uses: ./.github/workflows/docker-build-amd64.yml
+    with:
+      version: ${{ inputs.version }}
+
+  build-arm64:
+    uses: ./.github/workflows/docker-build-arm64.yml
+    with:
+      version: ${{ inputs.version }}
+
+  # 合并 manifest（等待两个构建完成）
+  merge:
+    needs: [build-amd64, build-arm64]
+    uses: ./.github/workflows/docker-merge-manifest.yml
+    with:
+      version: ${{ inputs.version }}
+      push_latest: ${{ inputs.push_latest }}
