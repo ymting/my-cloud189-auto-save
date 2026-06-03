@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 let customPushConfigs = [];
 function loadSettings() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, _71;
         try {
             const response = yield fetch('/api/settings');
             const data = yield response.json();
@@ -84,48 +84,49 @@ function loadSettings() {
                 // 账号密码设置
                 document.getElementById('systemUserName').value = ((_33 = settings.system) === null || _33 === void 0 ? void 0 : _33.username) || '';
                 document.getElementById('systemPassword').value = ((_34 = settings.system) === null || _34 === void 0 ? void 0 : _34.password) || '';
-                const enableStrm = ((_35 = settings.strm) === null || _35 === void 0 ? void 0 : _35.enable) || false;
-                const enableEmby = ((_36 = settings.emby) === null || _36 === void 0 ? void 0 : _36.enable) || false;
+                document.getElementById('systemBaseUrl').value = ((_35 = settings.system) === null || _35 === void 0 ? void 0 : _35.baseUrl) || '';
+                const enableStrm = ((_36 = settings.strm) === null || _36 === void 0 ? void 0 : _36.enable) || false;
+                const enableEmby = ((_37 = settings.emby) === null || _37 === void 0 ? void 0 : _37.enable) || false;
                 // 媒体信息设置
                 document.getElementById('enableStrm').checked = enableStrm;
                 document.getElementById('enableEmby').checked = enableEmby;
-                document.getElementById('embyServer').value = ((_37 = settings.emby) === null || _37 === void 0 ? void 0 : _37.serverUrl) || '';
-                document.getElementById('embyApiKey').value = ((_38 = settings.emby) === null || _38 === void 0 ? void 0 : _38.apiKey) || '';
+                document.getElementById('embyServer').value = ((_38 = settings.emby) === null || _38 === void 0 ? void 0 : _38.serverUrl) || '';
+                document.getElementById('embyApiKey').value = ((_39 = settings.emby) === null || _39 === void 0 ? void 0 : _39.apiKey) || '';
                 // tg机器人设置
-                document.getElementById('enableTgBot').checked = ((_40 = (_39 = settings.telegram) === null || _39 === void 0 ? void 0 : _39.bot) === null || _40 === void 0 ? void 0 : _40.enable) || false;
-                document.getElementById('tgBotToken').value = ((_42 = (_41 = settings.telegram) === null || _41 === void 0 ? void 0 : _41.bot) === null || _42 === void 0 ? void 0 : _42.botToken) || '';
-                document.getElementById('tgBotChatId').value = ((_44 = (_43 = settings.telegram) === null || _43 === void 0 ? void 0 : _43.bot) === null || _44 === void 0 ? void 0 : _44.chatId) || '';
+                document.getElementById('enableTgBot').checked = ((_41 = (_40 = settings.telegram) === null || _40 === void 0 ? void 0 : _40.bot) === null || _41 === void 0 ? void 0 : _41.enable) || false;
+                document.getElementById('tgBotToken').value = ((_43 = (_42 = settings.telegram) === null || _42 === void 0 ? void 0 : _42.bot) === null || _43 === void 0 ? void 0 : _43.botToken) || '';
+                document.getElementById('tgBotChatId').value = ((_45 = (_44 = settings.telegram) === null || _44 === void 0 ? void 0 : _44.bot) === null || _45 === void 0 ? void 0 : _45.chatId) || '';
                 // cloudSaver设置
-                document.getElementById('cloudSaverUrl').value = ((_45 = settings.cloudSaver) === null || _45 === void 0 ? void 0 : _45.baseUrl) || '';
-                document.getElementById('cloudSaverUsername').value = ((_46 = settings.cloudSaver) === null || _46 === void 0 ? void 0 : _46.username) || '';
-                document.getElementById('cloudSaverPassword').value = ((_47 = settings.cloudSaver) === null || _47 === void 0 ? void 0 : _47.password) || '';
+                document.getElementById('cloudSaverUrl').value = ((_46 = settings.cloudSaver) === null || _46 === void 0 ? void 0 : _46.baseUrl) || '';
+                document.getElementById('cloudSaverUsername').value = ((_47 = settings.cloudSaver) === null || _47 === void 0 ? void 0 : _47.username) || '';
+                document.getElementById('cloudSaverPassword').value = ((_48 = settings.cloudSaver) === null || _48 === void 0 ? void 0 : _48.password) || '';
                 // 刮削
-                document.getElementById('enableScraper').checked = ((_48 = settings.tmdb) === null || _48 === void 0 ? void 0 : _48.enableScraper) || false;
+                document.getElementById('enableScraper').checked = ((_49 = settings.tmdb) === null || _49 === void 0 ? void 0 : _49.enableScraper) || false;
                 // tmdbkey
-                document.getElementById('tmdbApiKey').value = ((_49 = settings.tmdb) === null || _49 === void 0 ? void 0 : _49.tmdbApiKey) || '';
+                document.getElementById('tmdbApiKey').value = ((_50 = settings.tmdb) === null || _50 === void 0 ? void 0 : _50.tmdbApiKey) || '';
                 // openai配置
-                document.getElementById('enableOpenAI').checked = ((_50 = settings.openai) === null || _50 === void 0 ? void 0 : _50.enable) || false;
-                document.getElementById('openaiBaseUrl').value = ((_51 = settings.openai) === null || _51 === void 0 ? void 0 : _51.baseUrl) || '';
-                document.getElementById('openaiApiKey').value = ((_52 = settings.openai) === null || _52 === void 0 ? void 0 : _52.apiKey) || '';
-                document.getElementById('openaiModel').value = ((_53 = settings.openai) === null || _53 === void 0 ? void 0 : _53.model) || '';
-                document.getElementById('openaiTemplate').value = ((_55 = (_54 = settings.openai) === null || _54 === void 0 ? void 0 : _54.rename) === null || _55 === void 0 ? void 0 : _55.template) || '';
-                document.getElementById('openaiMovieTemplate').value = ((_57 = (_56 = settings.openai) === null || _56 === void 0 ? void 0 : _56.rename) === null || _57 === void 0 ? void 0 : _57.movieTemplate) || '';
+                document.getElementById('enableOpenAI').checked = ((_51 = settings.openai) === null || _51 === void 0 ? void 0 : _51.enable) || false;
+                document.getElementById('openaiBaseUrl').value = ((_52 = settings.openai) === null || _52 === void 0 ? void 0 : _52.baseUrl) || '';
+                document.getElementById('openaiApiKey').value = ((_53 = settings.openai) === null || _53 === void 0 ? void 0 : _53.apiKey) || '';
+                document.getElementById('openaiModel').value = ((_54 = settings.openai) === null || _54 === void 0 ? void 0 : _54.model) || '';
+                document.getElementById('openaiTemplate').value = ((_56 = (_55 = settings.openai) === null || _55 === void 0 ? void 0 : _55.rename) === null || _56 === void 0 ? void 0 : _56.template) || '';
+                document.getElementById('openaiMovieTemplate').value = ((_58 = (_57 = settings.openai) === null || _57 === void 0 ? void 0 : _57.rename) === null || _58 === void 0 ? void 0 : _58.movieTemplate) || '';
                 // alist
-                document.getElementById('enableAlist').checked = ((_58 = settings.alist) === null || _58 === void 0 ? void 0 : _58.enable) || false;
-                document.getElementById('alistServer').value = ((_59 = settings.alist) === null || _59 === void 0 ? void 0 : _59.baseUrl) || '';
-                document.getElementById('alistApiKey').value = ((_60 = settings.alist) === null || _60 === void 0 ? void 0 : _60.apiKey) || '';
+                document.getElementById('enableAlist').checked = ((_59 = settings.alist) === null || _59 === void 0 ? void 0 : _59.enable) || false;
+                document.getElementById('alistServer').value = ((_60 = settings.alist) === null || _60 === void 0 ? void 0 : _60.baseUrl) || '';
+                document.getElementById('alistApiKey').value = ((_61 = settings.alist) === null || _61 === void 0 ? void 0 : _61.apiKey) || '';
                 // hdhive 影巢
-                document.getElementById('enableHDHive').checked = ((_61 = settings.hdhive) === null || _61 === void 0 ? void 0 : _61.enabled) || false;
-                document.getElementById('hdhiveClientId').value = ((_62 = settings.hdhive) === null || _62 === void 0 ? void 0 : _62.clientId) || '';
-                document.getElementById('hdhiveApiKey').value = ((_63 = settings.hdhive) === null || _63 === void 0 ? void 0 : _63.apiKey) || '';
-                document.getElementById('hdhiveBaseUrl').value = ((_64 = settings.hdhive) === null || _64 === void 0 ? void 0 : _64.baseUrl) || '';
+                document.getElementById('enableHDHive').checked = ((_62 = settings.hdhive) === null || _62 === void 0 ? void 0 : _62.enabled) || false;
+                document.getElementById('hdhiveClientId').value = ((_63 = settings.hdhive) === null || _63 === void 0 ? void 0 : _63.clientId) || '';
+                document.getElementById('hdhiveApiKey').value = ((_64 = settings.hdhive) === null || _64 === void 0 ? void 0 : _64.apiKey) || '';
+                document.getElementById('hdhiveBaseUrl').value = ((_65 = settings.hdhive) === null || _65 === void 0 ? void 0 : _65.baseUrl) || '';
                 // pushplus
-                document.getElementById('enablePushPlus').checked = ((_65 = settings.pushplus) === null || _65 === void 0 ? void 0 : _65.enable) || false;
-                document.getElementById('pushplusToken').value = ((_66 = settings.pushplus) === null || _66 === void 0 ? void 0 : _66.token) || '';
-                document.getElementById('pushplusTopic').value = ((_67 = settings.pushplus) === null || _67 === void 0 ? void 0 : _67.topic) || '';
-                document.getElementById('pushplusChannel').value = ((_68 = settings.pushplus) === null || _68 === void 0 ? void 0 : _68.channel) || '';
-                document.getElementById('pushplusWebhook').value = ((_69 = settings.pushplus) === null || _69 === void 0 ? void 0 : _69.webhook) || '';
-                document.getElementById('pushplusTo').value = ((_70 = settings.pushplus) === null || _70 === void 0 ? void 0 : _70.to) || '';
+                document.getElementById('enablePushPlus').checked = ((_66 = settings.pushplus) === null || _66 === void 0 ? void 0 : _66.enable) || false;
+                document.getElementById('pushplusToken').value = ((_67 = settings.pushplus) === null || _67 === void 0 ? void 0 : _67.token) || '';
+                document.getElementById('pushplusTopic').value = ((_68 = settings.pushplus) === null || _68 === void 0 ? void 0 : _68.topic) || '';
+                document.getElementById('pushplusChannel').value = ((_69 = settings.pushplus) === null || _69 === void 0 ? void 0 : _69.channel) || '';
+                document.getElementById('pushplusWebhook').value = ((_70 = settings.pushplus) === null || _70 === void 0 ? void 0 : _70.webhook) || '';
+                document.getElementById('pushplusTo').value = ((_71 = settings.pushplus) === null || _71 === void 0 ? void 0 : _71.to) || '';
                 customPushConfigs = settings.customPush || [];
             }
         }
@@ -209,6 +210,7 @@ function saveSettings() {
             system: {
                 username: document.getElementById('systemUserName').value,
                 password: document.getElementById('systemPassword').value,
+                baseUrl: document.getElementById('systemBaseUrl').value,
                 apiKey: document.getElementById('systemApiKey').value
             },
             pushplus: {

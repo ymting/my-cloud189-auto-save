@@ -79,6 +79,7 @@ async function loadSettings() {
             // 账号密码设置
             document.getElementById('systemUserName').value = settings.system?.username || '';
             document.getElementById('systemPassword').value = settings.system?.password || '';
+            document.getElementById('systemBaseUrl').value = settings.system?.baseUrl || '';
             
             const enableStrm = settings.strm?.enable || false
             const enableEmby = settings.emby?.enable || false
@@ -210,6 +211,7 @@ async function saveSettings() {
         system: {
             username: document.getElementById('systemUserName').value,
             password: document.getElementById('systemPassword').value,
+            baseUrl: document.getElementById('systemBaseUrl').value,
             apiKey: document.getElementById('systemApiKey').value
         },
         pushplus: {
