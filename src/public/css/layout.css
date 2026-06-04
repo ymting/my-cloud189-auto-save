@@ -224,7 +224,9 @@ body::before, body::after {
 
 [data-theme="cinema"] .notification-dropdown {
     background: rgba(30, 41, 59, 0.95);
-    border-color: rgba(71, 85, 105, 0.3);
+    border-color: rgba(99, 102, 241, 0.2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .logo {

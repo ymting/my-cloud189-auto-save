@@ -18,9 +18,9 @@
     <link rel="stylesheet" href="/css/layout.css">
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/folder-tree.css">
-    <link rel="stylesheet" href="/css/modal.css">
+    <link rel="stylesheet" href="/css/modal.css?v=3.0.0_1502">
     <link rel="stylesheet" href="/css/card-view.css?v=3.0.0">
-    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/components.css?v=3.0.0_1502">
     <link rel="stylesheet" href="/css/delete-dialog.css">
     <link rel="stylesheet" href="/css/table-view.css">
     <link rel="stylesheet" href="/css/table.css">
@@ -29,13 +29,14 @@
     <link rel="stylesheet" href="/css/logs.css">
     <link rel="stylesheet" href="/css/loading.css">
     <link rel="stylesheet" href="/css/message.css">
-    <link rel="stylesheet" href="/css/floating-btn.css">
+    <link rel="stylesheet" href="/css/floating-btn.css?v=3.0.0_1503">
     <link rel="stylesheet" href="/css/cloudsaver.css">
+    <link rel="stylesheet" href="/css/hdhive.css">
     <link rel="stylesheet" href="/css/chat.css">
-    <link rel="stylesheet" href="/css/ui-themes.css?v=3.0.0">
+    <link rel="stylesheet" href="/css/ui-themes.css?v=3.0.0_1502">
     <link rel="stylesheet" href="/css/ai-confirm-dialog.css?v=3.0.0">
-    <link rel="stylesheet" href="/css/cinema-theme.css?v=3.0.0">
-    <link rel="stylesheet" href="/css/mobile.css?v=3.0.0">
+    <link rel="stylesheet" href="/css/cinema-theme.css?v=3.0.0_1503">
+    <link rel="stylesheet" href="/css/mobile.css?v=3.0.0_1503">
 </head>
 <body>
     <div class="app-layout">
@@ -53,7 +54,7 @@
                 </button>
             </div>
             <div class="sidebar-version">
-                <span class="version-badge">v3.0.0</span>
+                <span class="version-badge" id="sidebarVersion">加载中...</span>
             </div>
             <nav class="sidebar-nav">
                 <div class="nav-item" data-tab="dashboard">
@@ -542,6 +543,11 @@
                     </thead>
                     <tbody></tbody>
                 </table>
+                <div id="taskPagination" class="pagination-bar" style="display:none;padding:12px 0;text-align:center;">
+                    <button class="btn-default pagination-prev" onclick="changeTaskPage(-1)">上一页</button>
+                    <span id="taskPageInfo" style="margin:0 12px;font-size:13px;"></span>
+                    <button class="btn-default pagination-next" onclick="changeTaskPage(1)">下一页</button>
+                </div>
             </div>
         </div>
 
@@ -573,6 +579,15 @@
                                         <input type="password" id="systemPassword" placeholder="登录密码">
                                     </div>
                                     <small class="form-text">设置后访问系统需要登录验证。</small>
+                                </div>
+                            </div>
+                            <div class="settings-item">
+                                <div class="settings-item-label">系统对外地址</div>
+                                <div class="settings-item-content">
+                                    <div class="settings-row">
+                                        <input type="text" id="systemBaseUrl" placeholder="例如: http://192.168.1.100:3000 或 https://example.com">
+                                    </div>
+                                    <small class="form-text">用于 OAuth 回调，影巢等功能需要此配置</small>
                                 </div>
                             </div>
                         </div>
@@ -838,6 +853,7 @@
                                         <label><input type="checkbox" id="proxyTmdb">TMDB</label>
                                         <label><input type="checkbox" id="proxyOpenAI">OpenAI</label>
                                         <label><input type="checkbox" id="proxyCloud189">天翼云盘</label>
+                                        <label><input type="checkbox" id="proxyHDHive">影巢</label>
                                         <label><input type="checkbox" id="proxyCustomPush">自定义推送</label>
                                     </div>
                                 </div>
@@ -979,6 +995,22 @@
                             </div>
                             <div class="settings-item">
                                 <div class="settings-item-label">
+                                    <input type="checkbox" id="enableHDHive">
+                                    影巢 (HDHive)
+                                </div>
+                                <div class="settings-item-content">
+                                    <div class="settings-row">
+                                        <input type="text" id="hdhiveClientId" placeholder="Client ID (应用公开ID)">
+                                        <input type="text" id="hdhiveApiKey" placeholder="API Key (应用Secret)">
+                                    </div>
+                                    <div class="settings-row">
+                                        <input type="text" id="hdhiveBaseUrl" placeholder="API地址 (默认: https://hdhive.com)">
+                                    </div>
+                                    <small class="form-text">在影巢创建 OpenAPI 应用获取 Client ID 和 Secret，支持 OAuth 用户授权、资源查询与解锁</small>
+                                </div>
+                            </div>
+                            <div class="settings-item">
+                                <div class="settings-item-label">
                                     <input type="checkbox" id="enableAlist">
                                     Alist 挂载
                                 </div>
@@ -1069,6 +1101,7 @@
 <script src="/js/loading.js?v=3.0.0"></script>
 <script src="/js/message.js?v=3.0.0"></script>
 <script src="/js/cloudsaver.js?v=3.0.0"></script>
+<script src="/js/hdhive.js?v=3.0.0"></script>
 <script src="/js/ai-confirm-dialog.js?v=3.0.0"></script>
 <script src="/js/chat.js?v=3.0.0"></script>
 <script src="/js/strm.js?v=3.0.0"></script>
@@ -1236,6 +1269,9 @@
         <div class="floating-btn" onclick="showCloudsaver()" title="CloudSaver">
             CloudSaver
         </div>
+        <div class="floating-btn hdhive-btn" onclick="openHDHiveModal()" title="影巢搜索" style="display: none;">
+            影巢
+        </div>
         <div class="floating-btn" onclick="showAIChat()" title="AI助手" style="bottom: 100px;">
             AI助手
         </div>
@@ -1247,7 +1283,7 @@
         </div>
     </div>
     <div class="floating-btn" onclick="toggleFloatingBtns()" title="更多">
-        更多
+        <span id="toggleIcon">▼</span> 更多
     </div>
 </div>
 
@@ -1278,6 +1314,116 @@
                     <button onclick="handleSelectedResource('open')">打开链接</button>
                     <button onclick="handleSelectedResource('create')">创建任务</button>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 影巢搜索模态框 -->
+<div id="hdhiveModal" class="modal">
+    <div class="modal-content hdhive-modal-content">
+        <div class="modal-header hdhive-header">
+            <h3>🎬 影巢资源搜索</h3>
+            <div class="hdhive-auth-info">
+                <span id="hdhiveAuthStatus" style="margin-right: 8px;"></span>
+                <button id="hdhiveAuthBtn" onclick="startHDHiveOAuth()" style="display: none; padding: 4px 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">OAuth 授权</button>
+                <button id="hdhiveRevokeBtn" onclick="revokeHDHiveAuth()" style="display: none; padding: 4px 12px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">撤销授权</button>
+            </div>
+            <div class="hdhive-quota" id="hdhiveQuota" style="display: none;">
+                <span class="quota-label">积分:</span>
+                <span class="quota-value" id="hdhivePoints">--</span>
+            </div>
+            <button onclick="closeHDHiveModal()" class="close-btn">&times;</button>
+        </div>
+        <div class="hdhive-body">
+            <!-- TMDB 搜索区 -->
+            <div class="hdhive-search-section">
+                <div class="hdhive-search-box">
+                    <input type="text" id="hdhiveSearchInput" placeholder="搜索电影和剧集...">
+                    <button type="button" onclick="searchHDHiveTMDB()" class="hdhive-search-btn">
+                        <span>搜索</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TMDB 结果展示墙 -->
+            <div class="hdhive-tmdb-results" id="hdhiveTmdbResults" style="display: none;">
+                <div class="hdhive-results-grid" id="hdhiveResultsGrid"></div>
+            </div>
+
+            <!-- 资源详情区（选中影视后展示） -->
+            <div class="hdhive-resource-section" id="hdhiveResourceSection" style="display: none;">
+                <div class="hdhive-media-info" id="hdhiveMediaInfo">
+                    <img class="hdhive-poster" id="hdhivePoster" src="" alt="">
+                    <div class="hdhive-media-meta">
+                        <h4 id="hdhiveMediaTitle"></h4>
+                        <p id="hdhiveMediaYear"></p>
+                        <p id="hdhiveMediaOverview"></p>
+                    </div>
+                    <button class="hdhive-back-btn" onclick="backToTMDBResults()">返回搜索</button>
+                </div>
+
+                <!-- 资源列表 -->
+                <div class="hdhive-resource-list" id="hdhiveResourceList">
+                    <div class="hdhive-loading" id="hdhiveLoading">
+                        <div class="spinner"></div>
+                        <span>加载资源中...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 空状态 -->
+            <div class="hdhive-empty" id="hdhiveEmpty">
+                <div class="hdhive-empty-icon">🎬</div>
+                <p>输入影视名称搜索资源</p>
+                <small>通过 TMDB 精准匹配，支持电影和剧集</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 解锁确认弹窗 -->
+<div id="hdhiveUnlockModal" class="modal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3>⚠️ 确认解锁</h3>
+            <button onclick="closeHDHiveUnlockModal()" class="close-btn">&times;</button>
+        </div>
+        <div class="hdhive-unlock-body">
+            <p id="hdhiveUnlockTitle"></p>
+            <div class="hdhive-unlock-warning" id="hdhiveUnlockWarning">
+                <span class="warning-icon">⚠️</span>
+                <span id="hdhiveUnlockPointsText">解锁将消耗 <strong id="hdhiveUnlockPoints">0</strong> 积分</span>
+            </div>
+            <div class="hdhive-unlock-actions">
+                <button class="btn-default" onclick="closeHDHiveUnlockModal()">取消</button>
+                <button class="btn-danger" id="hdhiveUnlockConfirmBtn" onclick="confirmUnlock()">确认解锁</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 解锁成功弹窗 -->
+<div id="hdhiveSuccessModal" class="modal">
+    <div class="modal-content" style="max-width: 450px;">
+        <div class="modal-header">
+            <h3>✅ 解锁成功</h3>
+            <button onclick="closeHDHiveSuccessModal()" class="close-btn">&times;</button>
+        </div>
+        <div class="hdhive-success-body">
+            <div class="hdhive-link-box">
+                <input type="text" id="hdhiveUnlockedLink" readonly>
+                <button onclick="copyHDHiveLink()" title="复制链接">📋</button>
+            </div>
+            <div class="hdhive-code-box" id="hdhiveCodeBox" style="display: none;">
+                <span>提取码:</span>
+                <input type="text" id="hdhiveUnlockedCode" readonly>
+                <button onclick="copyHDHiveCode()" title="复制提取码">📋</button>
+            </div>
+            <div class="hdhive-success-actions">
+                <button class="btn-primary" onclick="createTaskFromHDHive()">
+                    <span>🚀 一键创建转存任务</span>
+                </button>
             </div>
         </div>
     </div>
@@ -1438,14 +1584,14 @@
 </div>
 
 <!-- 手动指定 TMDB 模态框 -->
-<div id="manualTmdbModal" class="modal" style="z-index: 1100;">
+<div id="manualTmdbModal" class="modal" style="z-index: 5100;">
     <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header">
             <h3>手动指定 TMDB</h3>
         </div>
         <div class="form-body">
             <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <select id="tmdbSearchType" style="flex: 1;">
+                <select id="tmdbSearchTypeManual" style="flex: 1;">
                     <option value="tv">剧集 / 动漫 / 纪录片</option>
                     <option value="movie">电影</option>
                 </select>
@@ -1459,7 +1605,7 @@
             </div>
             <div class="form-group">
                 <label>搜索结果 <small class="form-text">点击选择并绑定给勾选的任务</small></label>
-                <div id="tmdbSearchResults" style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px;">
+                <div id="tmdbSearchResultsManual" style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px;">
                     <!-- 结果列表 -->
                 </div>
             </div>
@@ -1471,7 +1617,7 @@
 </div>
 
 <!-- OpenAI模型选择模态框 -->
-<div id="openaiModelsModal" class="modal" style="z-index: 1200;">
+<div id="openaiModelsModal" class="modal" style="z-index: 5200;">
     <div class="modal-content" style="max-width: 500px;">
         <div class="modal-header">
             <h3>选择模型</h3>

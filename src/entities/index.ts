@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
 
 @Entity()
 export class Account {
@@ -67,6 +67,7 @@ export class Task {
     @PrimaryGeneratedColumn()
     id!: number;
 
+    @Index('IDX_TASK_ACCOUNT_ID')
     @Column('integer')
     accountId!: number;
 
@@ -83,6 +84,7 @@ export class Task {
     @Column('text', { nullable: true })
     videoType!: string;
 
+    @Index('IDX_TASK_STATUS')
     @Column('text', { default: 'pending' })
     status!: string;
 
@@ -216,6 +218,7 @@ export class Task {
     @Column({ nullable: true })
     enableTaskScraper!: boolean; // 是否启用刮削
 
+    @Index('IDX_TASK_ENABLE_SYSTEM_PROXY')
     @Column({ nullable: true })
     enableSystemProxy!: boolean; // 是否启用系统代理
     // tmdb内容 json格式

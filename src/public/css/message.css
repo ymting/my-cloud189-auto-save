@@ -55,9 +55,9 @@
 }
 
 .message-info {
-    background-color: rgba(99, 102, 241, 0.1);
-    border-color: rgba(99, 102, 241, 0.3);
-    color: #6366f1;
+    background-color: #e6f7ff;
+    border-color: #91d5ff;
+    color: #1890ff;
 }
 
 .message::before {

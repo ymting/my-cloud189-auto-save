@@ -1,20 +1,99 @@
+const VERSION_STORAGE_KEY = 'lastSeenVersion';
+
+// 版本更新通知弹窗
+function showVersionUpdateModal(version, changelog = []) {
+    // 检查是否已经显示过弹窗
+    const lastSeenVersion = localStorage.getItem(VERSION_STORAGE_KEY);
+    if (lastSeenVersion === version) return;
+
+    // 生成更新日志列表
+    const changelogHtml = changelog.length > 0
+        ? changelog.map(item => `<li>${item}</li>`).join('')
+        : '<li>暂无更新说明</li>';
+
+    // 创建弹窗
+    const modal = document.createElement('div');
+    modal.id = 'versionUpdateModal';
+    modal.innerHTML = `
+        <div class="version-modal-overlay"></div>
+        <div class="version-modal-content">
+            <div class="version-modal-header">
+                <span class="version-modal-icon">🎉</span>
+                <h3>新版本通知</h3>
+            </div>
+            <div class="version-modal-body">
+                <div class="version-modal-version">v${version}</div>
+                <div class="version-modal-changes">
+                    <h4>本次更新内容：</h4>
+                    <ul>${changelogHtml}</ul>
+                </div>
+            </div>
+            <div class="version-modal-footer">
+                <button class="btn-primary version-modal-btn" onclick="closeVersionModal('${version}')">朕已阅</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// 关闭版本弹窗
+window.closeVersionModal = function(version) {
+    const modal = document.getElementById('versionUpdateModal');
+    if (modal) {
+        modal.classList.add('fade-out');
+        setTimeout(() => modal.remove(), 300);
+    }
+    localStorage.setItem(VERSION_STORAGE_KEY, version);
+};
+
 async function loadVersion() {
     try {
-        const response = await fetch('/api/version');
+        const response = await fetch('/api/system/version');
         const data = await response.json();
-        const versionStr = data.version || 'unknown';
+        if (!data.success || !data.data) return;
+
+        const versionStr = data.data.version || 'unknown';
+        const changelog = data.data.changelog || [];
         const versionEl = document.getElementById('version');
-        if (!versionEl) return;
-        // dev 版本添加特殊标识
-        if (versionStr.includes('-dev')) {
-            versionEl.innerText = `v${versionStr}`;
-            versionEl.style.color = '#ff9800';  // 开发版用橙色
-            versionEl.title = '开发测试版本';
-        } else {
-            versionEl.innerText = `v${versionStr}`;
+        const sidebarVersionEl = document.getElementById('sidebarVersion');
+
+        // 格式化版本显示
+        const formatVersion = (v) => {
+            if (v.includes('-dev')) {
+                return `v${v}`;
+            }
+            return `v${v}`;
+        };
+
+        // 更新顶部版本号
+        if (versionEl) {
+            if (versionStr.includes('-dev')) {
+                versionEl.innerText = formatVersion(versionStr);
+                versionEl.style.color = '#ff9800';
+                versionEl.title = '开发测试版本';
+            } else {
+                versionEl.innerText = formatVersion(versionStr);
+            }
         }
+
+        // 更新侧边栏版本号
+        if (sidebarVersionEl) {
+            sidebarVersionEl.innerText = formatVersion(versionStr);
+            if (versionStr.includes('-dev')) {
+                sidebarVersionEl.style.color = '#ff9800';
+                sidebarVersionEl.title = '开发测试版本';
+            }
+        }
+
+        // 显示版本更新通知弹窗
+        showVersionUpdateModal(versionStr, changelog);
     } catch (error) {
         console.error('Failed to load version:', error);
+        // 加载失败时显示默认值
+        const sidebarVersionEl = document.getElementById('sidebarVersion');
+        if (sidebarVersionEl) {
+            sidebarVersionEl.innerText = 'v?.?.?';
+        }
     }
 }
 
@@ -326,7 +405,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 existing.remove();
                 return;
             }
-            
+
+            // 获取运行时长
             let uptimeStr = '获取中...';
             try {
                 const res = await fetch('/api/version');
@@ -337,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const h = Math.floor((seconds % (3600 * 24)) / 3600);
                     const m = Math.floor((seconds % 3600) / 60);
                     const s = Math.floor(seconds % 60);
-                    
+
                     let parts = [];
                     if (d > 0) parts.push(`${d} 天`);
                     if (h > 0 || d > 0) parts.push(`${h} 小时`);
@@ -354,6 +434,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 uptimeStr = '获取失败';
             }
 
+            // 获取版本信息
+            let versionStr = '?.?.?';
+            let changelog = [];
+            try {
+                const res = await fetch('/api/system/version');
+                const data = await res.json();
+                if (data.success && data.data) {
+                    versionStr = data.data.version || '?.?.?';
+                    changelog = data.data.changelog || [];
+                }
+            } catch (err) {
+                console.error('Failed to fetch version:', err);
+            }
+
             const dropdown = document.createElement('div');
             dropdown.className = 'notification-dropdown';
             dropdown.innerHTML = `
@@ -361,7 +455,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h3 style="margin: 0; font-size: 15px; font-weight: 600;">系统状态</h3>
                     <span class="notification-close" style="cursor: pointer; font-size: 20px; line-height: 1;">&times;</span>
                 </div>
-                <div class="notification-body" style="padding: 16px; display: flex; flex-direction: column; gap: 16px;">
+                <div class="notification-body" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 10px; background: rgba(75, 75, 250, 0.1); padding: 12px 14px; border-radius: 8px; border: 1px solid rgba(75, 75, 250, 0.2);">
+                        <i class="ph ph-info" style="font-size: 20px; color: #4B4BFA;"></i>
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <span style="font-size: 12px; color: var(--text-muted);">当前版本</span>
+                            <span class="version-text" style="font-size: 14px; font-weight: 600; color: var(--text-main);">v${versionStr}</span>
+                        </div>
+                    </div>
                     <div style="display: flex; align-items: center; gap: 10px; background: rgba(75, 75, 250, 0.1); padding: 12px 14px; border-radius: 8px; border: 1px solid rgba(75, 75, 250, 0.2);">
                         <i class="ph ph-clock" style="font-size: 20px; color: #4B4BFA;"></i>
                         <div style="display: flex; flex-direction: column; gap: 2px;">
@@ -369,26 +470,35 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="uptime-text" style="font-size: 14px; font-weight: 600; color: var(--text-main);">${uptimeStr}</span>
                         </div>
                     </div>
-                    <div style="border-top: 1px solid var(--border-color); padding-top: 12px;">
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+                        <button id="btnShowChangelog" style="width: 100%; padding: 10px 12px; background: var(--bg-main); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s ease;">
+                            <i class="ph ph-list-bullets" style="font-size: 16px;"></i>更新日志
+                        </button>
                         <button onclick="document.getElementById('logsModal').style.display='flex'; document.querySelector('.notification-dropdown').remove();" style="width: 100%; padding: 10px 12px; background: #4B4BFA; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s ease;">
-                            <i class="ph ph-file-text" style="font-size: 16px;"></i>查看系统日志
+                            <i class="ph ph-file-text" style="font-size: 16px;"></i>系统日志
                         </button>
                     </div>
                 </div>
             `;
-            
+
             const rect = notificationBtn.getBoundingClientRect();
             dropdown.style.position = 'fixed';
             dropdown.style.right = `${window.innerWidth - rect.right}px`;
             dropdown.style.top = `${rect.bottom + 8}px`;
             dropdown.style.zIndex = '2000';
-            
+
             document.body.appendChild(dropdown);
-            
+
+            // 更新日志按钮点击事件
+            dropdown.querySelector('#btnShowChangelog').addEventListener('click', () => {
+                dropdown.remove();
+                showChangelogModal(versionStr, changelog);
+            });
+
             dropdown.querySelector('.notification-close').addEventListener('click', () => {
                 dropdown.remove();
             });
-            
+
             setTimeout(() => {
                 document.addEventListener('click', function closeDropdown(e) {
                     if (!dropdown.contains(e.target) && !notificationBtn.contains(e.target)) {
@@ -397,6 +507,50 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             }, 0);
+        });
+    }
+
+    // 显示更新日志弹窗
+    function showChangelogModal(version, changelog) {
+        const existing = document.getElementById('changelogModal');
+        if (existing) {
+            existing.remove();
+            return;
+        }
+
+        const changelogHtml = changelog.length > 0
+            ? changelog.map(item => `<li style="margin-bottom: 8px;">${item}</li>`).join('')
+            : '<li>暂无更新说明</li>';
+
+        const modal = document.createElement('div');
+        modal.id = 'changelogModal';
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 3000;';
+        modal.innerHTML = `
+            <div style="background: var(--bg-main); border-radius: 12px; max-width: 480px; width: 90%; max-height: 80vh; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-color);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 24px;">📋</span>
+                        <div>
+                            <h3 style="margin: 0; font-size: 16px; font-weight: 600;">更新日志</h3>
+                            <span style="font-size: 12px; color: var(--text-muted);">v${version}</span>
+                        </div>
+                    </div>
+                    <span class="changelog-close" style="cursor: pointer; font-size: 24px; line-height: 1; color: var(--text-muted);">&times;</span>
+                </div>
+                <div style="padding: 20px; overflow-y: auto; max-height: calc(80vh - 70px);">
+                    <ul style="margin: 0; padding-left: 20px; color: var(--text-main); font-size: 14px; line-height: 1.6;">
+                        ${changelogHtml}
+                    </ul>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // 关闭事件
+        modal.querySelector('.changelog-close').addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
         });
     }
     

@@ -99,6 +99,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Task.prototype, "id", void 0);
 __decorate([
+    (0, typeorm_1.Index)('IDX_TASK_ACCOUNT_ID'),
     (0, typeorm_1.Column)('integer'),
     __metadata("design:type", Number)
 ], Task.prototype, "accountId", void 0);
@@ -120,6 +121,7 @@ __decorate([
     __metadata("design:type", String)
 ], Task.prototype, "videoType", void 0);
 __decorate([
+    (0, typeorm_1.Index)('IDX_TASK_STATUS'),
     (0, typeorm_1.Column)('text', { default: 'pending' }),
     __metadata("design:type", String)
 ], Task.prototype, "status", void 0);
@@ -295,6 +297,7 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Task.prototype, "enableTaskScraper", void 0);
 __decorate([
+    (0, typeorm_1.Index)('IDX_TASK_ENABLE_SYSTEM_PROXY'),
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", Boolean)
 ], Task.prototype, "enableSystemProxy", void 0);

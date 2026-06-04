@@ -1,11 +1,18 @@
 // 添加全局筛选参数
 let taskFilterParams = {
     status: 'all',
-    search: ''
+    search: '',
+    page: 1,
+    pageSize: 100
 };
+let taskTotal = 0;
 
 const taskTmdbCache = new Map();
 const taskTmdbPending = new Set();
+const tmdbEnrichQueue = [];
+let tmdbEnrichActive = 0;
+const TMDB_ENRICH_CONCURRENCY = 5;
+
 let mediaWallTasksSnapshot = [];
 let mediaWallRefreshTimer = null;
 
@@ -177,18 +184,31 @@ function scheduleMediaWallRefresh() {
     }, 180);
 }
 
-async function enrichTaskTmdb(task) {
-    if (parseTmdbContent(task)) {
-        return;
-    }
+// TMDB富化并发控制：同一时间最多 TMDB_ENRICH_CONCURRENCY 个请求
+function enqueueTmdbEnrich(task) {
+    if (parseTmdbContent(task)) return;
     if (taskTmdbCache.has(task.id)) {
         task.tmdbContent = JSON.stringify(taskTmdbCache.get(task.id));
         return;
     }
-    if (taskTmdbPending.has(task.id)) {
-        return;
-    }
+    if (taskTmdbPending.has(task.id)) return;
     taskTmdbPending.add(task.id);
+    tmdbEnrichQueue.push(task);
+    processTmdbEnrichQueue();
+}
+
+async function processTmdbEnrichQueue() {
+    while (tmdbEnrichQueue.length > 0 && tmdbEnrichActive < TMDB_ENRICH_CONCURRENCY) {
+        const task = tmdbEnrichQueue.shift();
+        tmdbEnrichActive++;
+        _doEnrichTaskTmdb(task).finally(() => {
+            tmdbEnrichActive--;
+            processTmdbEnrichQueue();
+        });
+    }
+}
+
+async function _doEnrichTaskTmdb(task) {
     try {
         let detail = null;
         if (task.tmdbId && task.videoType) {
@@ -218,8 +238,19 @@ async function enrichTaskTmdb(task) {
         if (detail) {
             taskTmdbCache.set(task.id, detail);
             task.tmdbContent = JSON.stringify(detail);
-            saveTmdbCacheToStorage();  // 持久化缓存到localStorage
+            saveTmdbCacheToStorage();
             scheduleMediaWallRefresh();
+            // 回写到数据库，持久化缓存
+            try {
+                await fetch(`/api/tasks/${task.id}/tmdb-content`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tmdbContent: detail })
+                });
+            } catch (e) {
+                // 回写失败不影响主流程
+                console.warn(`任务 ${task.id} TMDB 回写数据库失败:`, e.message);
+            }
         }
     } catch (error) {
         console.warn(`加载任务 ${task.id} 海报信息失败:`, error.message);
@@ -278,7 +309,7 @@ function renderTaskMediaWall(tasks) {
     const isCinemaMode = currentTheme === 'cinema';
 
     tasks.forEach(task => {
-        enrichTaskTmdb(task);
+        enqueueTmdbEnrich(task);
         taskList.push(task);
         const taskName = task.shareFolderName ? (task.resourceName + '/' + task.shareFolderName) : task.resourceName || '未知';
         const poster = getTaskPoster(task);
@@ -418,6 +449,32 @@ var taskList = []
 function getTaskById(id) {
     return taskList.find(task => task.id == id);
 }
+
+function updatePaginationUI() {
+    const paginationBar = document.getElementById('taskPagination');
+    const pageInfo = document.getElementById('taskPageInfo');
+    if (!paginationBar || !pageInfo) return;
+    const totalPages = Math.ceil(taskTotal / taskFilterParams.pageSize) || 1;
+    if (totalPages <= 1) {
+        paginationBar.style.display = 'none';
+        return;
+    }
+    paginationBar.style.display = '';
+    pageInfo.textContent = `第 ${taskFilterParams.page} / ${totalPages} 页（共 ${taskTotal} 条）`;
+    const prevBtn = paginationBar.querySelector('.pagination-prev');
+    const nextBtn = paginationBar.querySelector('.pagination-next');
+    if (prevBtn) prevBtn.disabled = taskFilterParams.page <= 1;
+    if (nextBtn) nextBtn.disabled = taskFilterParams.page >= totalPages;
+}
+
+function changeTaskPage(delta) {
+    const newPage = taskFilterParams.page + delta;
+    const totalPages = Math.ceil(taskTotal / taskFilterParams.pageSize) || 1;
+    if (newPage < 1 || newPage > totalPages) return;
+    taskFilterParams.page = newPage;
+    fetchTasks({ silent: true });
+}
+
 async function fetchTasks(options = {}) {
     const { silent = false } = options;
     const tableContainer = document.querySelector('#taskTab .table-container');
@@ -430,15 +487,17 @@ async function fetchTasks(options = {}) {
     }
 
     try {
-        const response = await fetch(`/api/tasks?status=${taskFilterParams.status}&search=${encodeURIComponent(taskFilterParams.search)}`);
+        const response = await fetch(`/api/tasks?status=${taskFilterParams.status}&search=${encodeURIComponent(taskFilterParams.search)}&page=${taskFilterParams.page}&pageSize=${taskFilterParams.pageSize}`);
         const data = await response.json();
         if (data.success) {
+            taskTotal = data.total || 0;
             taskList = [];
             const tbody = document.querySelector('#taskTable tbody');
             tbody.innerHTML = '';
             const currentUiStyle = document.documentElement.getAttribute('data-ui-style') || 'classic';
             if (currentUiStyle === 'media') {
                 renderTaskMediaWall(data.data);
+                updatePaginationUI();
                 return;
             }
             data.data.forEach(task => {
@@ -467,6 +526,7 @@ async function fetchTasks(options = {}) {
                     </tr>
                 `;
             });
+            updatePaginationUI();
         } else if (silent) {
             message.warning('任务搜索失败: ' + (data.error || '未知错误'));
         }
@@ -1448,6 +1508,7 @@ function filterTasks() {
     const searchValue = taskSearch.value.trim();
     taskFilterParams.status = taskFilter.value;
     taskFilterParams.search = searchValue;
+    taskFilterParams.page = 1;
 
     // 同步顶部全局搜索框，避免两个搜索入口显示状态不一致。
     const globalSearch = document.getElementById('globalSearch');

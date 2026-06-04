@@ -568,8 +568,10 @@
     }
 
     [data-theme="cinema"] .notification-dropdown {
-        background: rgba(15, 23, 42, 0.98);
+        background: rgba(15, 23, 42, 0.95);
         border-color: rgba(99, 102, 241, 0.2);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
     }
 
     [data-theme="cinema"] .modal-content {
@@ -704,13 +706,14 @@
     .floating-btn-group {
         right: 12px;
         bottom: 12px;
-        z-index: 999;
+        z-index: 4500;
     }
 
     .floating-btn {
         min-width: 60px;
         padding: 6px 12px;
         font-size: 12px;
+        pointer-events: auto;
     }
 }
 

@@ -40,6 +40,7 @@ const { TMDBService } = require('./services/tmdb');
 const WeChatWorkManager = require('./services/WeChatWorkService');
 const cloud189Utils = require('./utils/Cloud189Utils');
 const { TaskEventHandler } = require('./services/taskEventHandler');
+const { tmdbBackfillService } = require('./services/TmdbBackfillService');
 const app = express();
 app.use(cors({
     origin: '*', // 允许所有来源
@@ -530,7 +531,10 @@ AppDataSource.initialize().then(() => __awaiter(void 0, void 0, void 0, function
     }));
     // 任务相关API
     app.get('/api/tasks', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-        const { status, search } = req.query;
+        const { status, search, page: pageParam, pageSize: pageSizeParam } = req.query;
+        const page = Math.max(parseInt(pageParam) || 1, 1);
+        const pageSize = Math.min(parseInt(pageSizeParam) || 100, 500);
+        const skip = (page - 1) * pageSize;
         let whereClause = {};
         // 基础条件（AND）
         if (status && status !== 'all') {
@@ -586,7 +590,7 @@ AppDataSource.initialize().then(() => __awaiter(void 0, void 0, void 0, function
                 whereClause = searchConditions;
             }
         }
-        const tasks = yield taskRepo.find({
+        const [tasks, total] = yield taskRepo.findAndCount({
             order: { id: 'DESC' },
             relations: {
                 account: true
@@ -596,39 +600,41 @@ AppDataSource.initialize().then(() => __awaiter(void 0, void 0, void 0, function
                     username: true
                 }
             },
-            where: whereClause
+            where: whereClause,
+            take: pageSize,
+            skip
         });
-        const taskEventHandler = new TaskEventHandler();
-        for (const task of tasks) {
-            const hasSavedDisplay = task.lastSavedDisplayText || task.lastSavedFileName || task.missingEpisodes;
-            if (hasSavedDisplay || !task.lastFileUpdateTime || !task.realFolderId || task.enableSystemProxy) {
-                continue;
-            }
-            try {
-                const account = yield accountRepo.findOneBy({ id: task.accountId });
-                if (!account) {
-                    continue;
-                }
-                task.account = account;
-                const taskFiles = yield taskService.getFilesByTask(task);
-                const latestSavedDisplay = taskEventHandler.buildLatestSavedDisplay(task, taskFiles);
-                if (!latestSavedDisplay.lastSavedDisplayText && !latestSavedDisplay.lastSavedFileName) {
-                    continue;
-                }
-                task.lastSavedFileName = latestSavedDisplay.lastSavedFileName;
-                task.lastSavedDisplayText = latestSavedDisplay.lastSavedDisplayText;
-                task.missingEpisodes = latestSavedDisplay.missingEpisodes;
-                yield taskRepo.save(task);
-            }
-            catch (error) {
-                logTaskEvent(`任务[${task.resourceName}]初始化最新转存信息失败: ${error.message}`);
-            }
-        }
         // username脱敏
-        tasks.forEach(task => {
-            task.account.username = task.account.username.replace(/(.{3}).*(.{4})/, '$1****$2');
-        });
-        res.json({ success: true, data: tasks });
+        const maskedTasks = tasks.map(task => (Object.assign(Object.assign({}, task), { account: task.account ? Object.assign(Object.assign({}, task.account), { username: task.account.username.replace(/(.{3}).*(.{4})/, '$1****$2') }) : task.account })));
+        res.json({ success: true, data: maskedTasks, total, page, pageSize });
+    }));
+    // TMDB 批量补全接口（手动触发）
+    app.post('/api/tasks/tmdb-backfill', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const result = yield tmdbBackfillService.triggerManually();
+            res.json(result);
+        }
+        catch (error) {
+            res.json({ success: false, error: error.message });
+        }
+    }));
+    // 更新单个任务的 tmdbContent（前端回写用）
+    app.patch('/api/tasks/:id/tmdb-content', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const taskId = parseInt(req.params.id);
+            const { tmdbContent } = req.body;
+            if (!tmdbContent)
+                throw new Error('缺少 tmdbContent 参数');
+            const task = yield taskRepo.findOneBy({ id: taskId });
+            if (!task)
+                throw new Error('任务不存在');
+            task.tmdbContent = typeof tmdbContent === 'string' ? tmdbContent : JSON.stringify(tmdbContent);
+            yield taskRepo.save(task);
+            res.json({ success: true });
+        }
+        catch (error) {
+            res.json({ success: false, error: error.message });
+        }
     }));
     app.post('/api/tasks', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -1534,6 +1540,24 @@ AppDataSource.initialize().then(() => __awaiter(void 0, void 0, void 0, function
         taskService.processAllTasks(true);
         res.json({ success: true, data: null });
     }));
+    // 系统版本信息
+    app.get('/api/system/version', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        res.json({
+            success: true,
+            data: {
+                version: packageJson.version,
+                name: packageJson.name,
+                description: packageJson.description,
+                changelog: [
+                    '🚀 性能优化：移除阻塞加载的云盘 API 调用，页面秒开',
+                    '💾 TMDB 缓存：系统启动后自动补全缺失的 TMDB 信息',
+                    '📢 版本通知：版本更新时弹出通知，用户可关闭',
+                    '📊 数据库索引优化，查询速度提升',
+                    '✂️ API 分页改造，减少数据传输量'
+                ]
+            }
+        });
+    }));
     // 系统设置
     app.get('/api/settings', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.json({ success: true, data: ConfigService.getConfig() });
@@ -2022,6 +2046,8 @@ AppDataSource.initialize().then(() => __awaiter(void 0, void 0, void 0, function
     const port = process.env.PORT || 3000;
     app.listen(port, () => {
         console.log(`服务器运行在 http://localhost:${port}`);
+        // 启动 TMDB 后台补全服务
+        tmdbBackfillService.start();
     });
 })).catch(error => {
     console.error('数据库连接失败:', error);
