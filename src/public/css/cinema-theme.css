@@ -576,27 +576,10 @@
 
 /* 通知下拉框 */
 [data-theme="cinema"] .notification-dropdown {
-    background: #ffffff;
-    border: 1px solid #e0e0e0;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    --text-main: rgba(0, 0, 0, 0.85);
-    --text-muted: rgba(0, 0, 0, 0.45);
-    --border-color: #e0e0e0;
-    --bg-main: #f5f5f5;
-}
-
-[data-theme="cinema"] .notification-dropdown .notification-header h3 {
-    color: rgba(0, 0, 0, 0.85);
-}
-
-[data-theme="cinema"] .notification-dropdown .notification-close {
-    color: rgba(0, 0, 0, 0.45);
-}
-
-[data-theme="cinema"] .notification-dropdown .notification-close:hover {
-    color: rgba(0, 0, 0, 0.85);
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(99, 102, 241, 0.2);
 }
 
 /* ============================================
@@ -877,4 +860,16 @@
 
 [data-theme="cinema"] .version-modal-changes li {
     color: #94a3b8;
+}
+
+/* ============================================
+   影院模式 - 更新日志弹窗适配
+   ============================================ */
+
+[data-theme="cinema"] #changelogModal > div {
+    background: rgba(30, 41, 59, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(99, 102, 241, 0.2) !important;
+    box-shadow: 0 16px 64px rgba(0, 0, 0, 0.6) !important;
 }

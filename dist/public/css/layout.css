@@ -223,14 +223,10 @@ body::before, body::after {
 }
 
 [data-theme="cinema"] .notification-dropdown {
-    background: #ffffff;
-    border-color: #e0e0e0;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    --text-main: rgba(0, 0, 0, 0.85);
-    --text-muted: rgba(0, 0, 0, 0.45);
-    --border-color: #e0e0e0;
-    --bg-main: #f5f5f5;
+    background: rgba(30, 41, 59, 0.95);
+    border-color: rgba(99, 102, 241, 0.2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .logo {
