@@ -576,9 +576,9 @@
 
 /* 通知下拉框 */
 [data-theme="cinema"] .notification-dropdown {
-    background: rgba(30, 41, 59, 0.95);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(30, 41, 59, 0.98);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     border: 1px solid rgba(99, 102, 241, 0.2);
 }
 
