@@ -223,8 +223,10 @@ body::before, body::after {
 }
 
 [data-theme="cinema"] .notification-dropdown {
-    background: rgba(30, 41, 59, 0.95);
+    background: rgba(30, 41, 59, 0.98);
     border-color: rgba(71, 85, 105, 0.3);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 
 .logo {
