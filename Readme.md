@@ -1,18 +1,18 @@
 <div align="center">
     <img src="img/cloud189.png" alt="Logo" width="200">
     <h1>cloud189-auto-save</h1>
-    <p>天翼云盘自动转存系统二开版：自动追更转存、CAS 家庭中转秒传、AI 重命名、TMDB 级联级联绑定、SmartStrm Webhook、Telegram/企业微信交互与影院模式界面。</p>
+    <p>天翼云盘自动转存系统二开版：自动追更转存、CAS 家庭中转秒传、AI 重命名、TMDB 级联绑定、SmartStrm Webhook、Telegram/企业微信交互与影院模式界面。</p>
     <p>
         <a href="https://github.com/ymting/my-cloud189-auto-save/packages">
             <img src="https://img.shields.io/badge/GHCR-Docker-blue?style=flat-square&logo=docker" alt="GHCR Docker">
         </a>
-        <img src="https://img.shields.io/badge/version-3.0.0-green?style=flat-square" alt="Version 3.0.0">
+        <img src="https://img.shields.io/badge/version-3.0.1-green?style=flat-square" alt="Version 3.0.1">
         <img src="https://img.shields.io/badge/runtime-Node.js%2016+-339933?style=flat-square&logo=node.js" alt="Node.js 16+">
     </p>
 </div>
 
 > [!NOTE]
-> 本项目基于 [1307super/cloud189-auto-save](https://github.com/1307super/cloud189-auto-save) 深度二次开发。原版账号配置、基础任务、STRM、Emby 等通用说明可继续参考 [README_orig.md](./README_orig.md)，本文档以当前二开分支（`concept`）源码及最新系统实际情况为准。
+> 本项目基于 [1307super/cloud189-auto-save](https://github.com/1307super/cloud189-auto-save) 深度二次开发。原版账号配置、基础任务、STRM、Emby 等通用说明可继续参考 [README_orig.md](./README_orig.md)，本文档以当前源码及最新系统实际情况为准。
 
 ## ⚠️ 安全提醒
 
@@ -43,21 +43,19 @@
 
 ---
 
-## 🌟 concept 分支对比 main 分支（原版）核心新增与优化
+## 🌟 核心功能特性
 
-本分支（`concept`）作为二次开发增强版，在原版（`main`）基础功能之上进行了大量的核心重构与特性新增，核心对比与优化清单如下：
-
-| 功能模块 | main 分支 (原版) | concept 分支 (二开增强版) |
-|---|---|---|
-| **🎨 界面设计** | 基础明亮/夜间表格样式 | **Cinema 影院主题模式**：支持海报大图高斯模糊背景轮播、锁定海报、全平台响应式折叠侧边栏、毛玻璃卡片等现代 UI。 |
-| **🚀 转存突破** | 普通转存，易受 403 版权管控拦截 | **CAS 家庭空间中转秒传**：读取 `.cas` MD5 指纹秒传至家庭空间，再通过精细签名的 COPY 任务转移至个人目录，完美绕过 403 版权限制。 |
-| **🧹 空间容量自愈** | 需前置查询容量，频繁消耗 API 频次 | **响应式容量自愈**：正常秒传无额外 API 交互，遇到 403 空间超限时自动清空 `cas_temp` 中转目录与家庭回收站，并在 1.5s 延迟后自动重试。 |
-| **🎬 TMDB 刮削** | 单季手动绑定与刮削 | **连坐级联绑定**：手动绑定某一季 TMDB 后，系统自动寻找相同分享链接下的兄弟季任务**一键同步级联绑定**，并异步触发重命名与扫库。 |
-| **🔍 TMDB 搜索算法**| 仅支持基础标题搜索，易超时卡死 | 影视名称年份分离、支持中英文双语搜索与回退、冷门影视 voteCount 阈值微调、Got 10s 超时控制及 3 次指数递增重试防挂死机制。 |
-| **👥 多账号保活** | 需频繁手动刷新，Session 易过期失效 | 聚合多账号容量玻璃看板（异步加载防阻塞）、**4 小时心跳保活与 Token 静默刷新**。 |
-| **🤖 AI 智能助手** | 无 AI 对话功能 | **AI 助手 Function Calling 深度集成**：支持在 Web 端通过 AI 聊天直接下发控制指令（如执行、创建、修改任务，清除缓存等）且支持操作安全二次确认。 |
-| **🔌 Webhook 触发** | 转存成功即触发，重命名慢时下游刮削出错 | **精细化 Webhook 控制**：调整为“重命名完全完成后”触发，仅处理带 `📁` 路径的重命名消息，完美支持 `{savePath}` 和 `{videoType}` 占位符。 |
-| **🪵 系统自愈与性能**| 日志无限制增长，高并发易阻塞死锁 | **日志 5MB 自动滚动截断自愈**（防磁盘爆满）、Express SSE 零阻塞解耦、列表局部静默刷新、取消 5 个活跃任务数限制展示全部任务。 |
+| 功能模块 | 说明 |
+|---|---|
+| **🎨 界面设计** | **Cinema 影院主题模式**：支持海报大图高斯模糊背景轮播、锁定海报、全平台响应式折叠侧边栏、毛玻璃卡片等现代 UI。 |
+| **🚀 转存突破** | **CAS 家庭空间中转秒传**：读取 `.cas` MD5 指纹秒传至家庭空间，再通过精细签名的 COPY 任务转移至个人目录，完美绕过 403 版权限制。 |
+| **🧹 空间容量自愈** | **响应式容量自愈**：正常秒传无额外 API 交互，遇到 403 空间超限时自动清空 `cas_temp` 中转目录与家庭回收站，并在 1.5s 延迟后自动重试。 |
+| **🎬 TMDB 刮削** | **连坐级联绑定**：手动绑定某一季 TMDB 后，系统自动寻找相同分享链接下的兄弟季任务**一键同步级联绑定**，并异步触发重命名与扫库。 |
+| **🔍 TMDB 搜索算法** | 影视名称年份分离、支持中英文双语搜索与回退、冷门影视 voteCount 阈值微调、Got 10s 超时控制及 3 次指数递增重试防挂死机制。 |
+| **👥 多账号保活** | 聚合多账号容量玻璃看板（异步加载防阻塞）、**4 小时心跳保活与 Token 静默刷新**。 |
+| **🤖 AI 智能助手** | **AI 助手 Function Calling 深度集成**：支持在 Web 端通过 AI 聊天直接下发控制指令（如执行、创建、修改任务，清除缓存等）且支持操作安全二次确认。 |
+| **🔌 Webhook 触发** | **精细化 Webhook 控制**：调整为"重命名完全完成后"触发，仅处理带 `📁` 路径的重命名消息，完美支持 `{savePath}` 和 `{videoType}` 占位符。 |
+| **🪵 系统自愈与性能** | **日志 5MB 自动滚动截断自愈**（防磁盘爆满）、Express SSE 零阻塞解耦、列表局部静默刷新、取消 5 个活跃任务数限制展示全部任务。 |
 
 ---
 
@@ -87,7 +85,6 @@
 ## 🛠️ 快速部署与启动
 
 ### Docker 部署 (推荐)
-GHCR 工作流会按分支生成镜像标签，本二开版本请选择 `concept-latest` 分支镜像：
 
 ```bash
 docker run -d \
@@ -98,7 +95,7 @@ docker run -d \
   -v /yourpath/strm:/home/strm \
   -e PUID=0 \
   -e PGID=0 \
-  ghcr.io/ymting/my-cloud189-auto-save:concept-latest
+  ghcr.io/ymting/my-cloud189-auto-save:latest
 ```
 
 * **默认登录凭证**：
@@ -168,7 +165,11 @@ src/
 
 ## 🪵 变更历史
 
-### v3.0.0 (当前版本 - 2026-06二开重构)
+### v3.0.1 (2026-06-04)
+* **Docker ARM64 支持**：镜像支持 amd64 和 arm64 架构。
+* **Bug 修复**：Telegram 机器人常用目录保存、路径显示错误、天翼云盘每日签到 400 错误等问题修复。
+
+### v3.0.0 (2026-06 二开重构)
 * **容量自愈清理**：重构 CAS 秒传流程，实现 403 空间超限时的响应式自愈（清空 `cas_temp` 及家庭回收站）与 1.5s 延迟后自动重试，移除冗余的主动预检测，极大减少 API 请求频次开销。
 * **多账号心跳保活**：每 4 小时进行心跳会话检测并在失效时静默刷新。
 * **连坐级联绑定**：手动绑定 TMDB 后，相同分享链接的兄弟任务（其他季）自动提取 Season 号同步级联绑定，并异步触发重命名和扫库。
