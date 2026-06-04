@@ -54,7 +54,7 @@
                 </button>
             </div>
             <div class="sidebar-version">
-                <span class="version-badge">v3.0.0</span>
+                <span class="version-badge" id="sidebarVersion">加载中...</span>
             </div>
             <nav class="sidebar-nav">
                 <div class="nav-item" data-tab="dashboard">
@@ -543,6 +543,11 @@
                     </thead>
                     <tbody></tbody>
                 </table>
+                <div id="taskPagination" class="pagination-bar" style="display:none;padding:12px 0;text-align:center;">
+                    <button class="btn-default pagination-prev" onclick="changeTaskPage(-1)">上一页</button>
+                    <span id="taskPageInfo" style="margin:0 12px;font-size:13px;"></span>
+                    <button class="btn-default pagination-next" onclick="changeTaskPage(1)">下一页</button>
+                </div>
             </div>
         </div>
 

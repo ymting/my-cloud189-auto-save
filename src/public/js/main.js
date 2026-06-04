@@ -55,21 +55,45 @@ async function loadVersion() {
         const versionStr = data.data.version || 'unknown';
         const changelog = data.data.changelog || [];
         const versionEl = document.getElementById('version');
-        if (!versionEl) return;
+        const sidebarVersionEl = document.getElementById('sidebarVersion');
 
-        // dev 版本添加特殊标识
-        if (versionStr.includes('-dev')) {
-            versionEl.innerText = `v${versionStr}`;
-            versionEl.style.color = '#ff9800';  // 开发版用橙色
-            versionEl.title = '开发测试版本';
-        } else {
-            versionEl.innerText = `v${versionStr}`;
+        // 格式化版本显示
+        const formatVersion = (v) => {
+            if (v.includes('-dev')) {
+                return `v${v}`;
+            }
+            return `v${v}`;
+        };
+
+        // 更新顶部版本号
+        if (versionEl) {
+            if (versionStr.includes('-dev')) {
+                versionEl.innerText = formatVersion(versionStr);
+                versionEl.style.color = '#ff9800';
+                versionEl.title = '开发测试版本';
+            } else {
+                versionEl.innerText = formatVersion(versionStr);
+            }
+        }
+
+        // 更新侧边栏版本号
+        if (sidebarVersionEl) {
+            sidebarVersionEl.innerText = formatVersion(versionStr);
+            if (versionStr.includes('-dev')) {
+                sidebarVersionEl.style.color = '#ff9800';
+                sidebarVersionEl.title = '开发测试版本';
+            }
         }
 
         // 显示版本更新通知弹窗
         showVersionUpdateModal(versionStr, changelog);
     } catch (error) {
         console.error('Failed to load version:', error);
+        // 加载失败时显示默认值
+        const sidebarVersionEl = document.getElementById('sidebarVersion');
+        if (sidebarVersionEl) {
+            sidebarVersionEl.innerText = 'v?.?.?';
+        }
     }
 }
 
