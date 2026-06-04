@@ -8,12 +8,59 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+const VERSION_STORAGE_KEY = 'lastSeenVersion';
+// 版本更新通知弹窗
+function showVersionUpdateModal(version, changelog = []) {
+    // 检查是否已经显示过弹窗
+    const lastSeenVersion = localStorage.getItem(VERSION_STORAGE_KEY);
+    if (lastSeenVersion === version)
+        return;
+    // 生成更新日志列表
+    const changelogHtml = changelog.length > 0
+        ? changelog.map(item => `<li>${item}</li>`).join('')
+        : '<li>暂无更新说明</li>';
+    // 创建弹窗
+    const modal = document.createElement('div');
+    modal.id = 'versionUpdateModal';
+    modal.innerHTML = `
+        <div class="version-modal-overlay"></div>
+        <div class="version-modal-content">
+            <div class="version-modal-header">
+                <span class="version-modal-icon">🎉</span>
+                <h3>新版本通知</h3>
+            </div>
+            <div class="version-modal-body">
+                <div class="version-modal-version">v${version}</div>
+                <div class="version-modal-changes">
+                    <h4>本次更新内容：</h4>
+                    <ul>${changelogHtml}</ul>
+                </div>
+            </div>
+            <div class="version-modal-footer">
+                <button class="btn-primary version-modal-btn" onclick="closeVersionModal('${version}')">朕已阅</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+// 关闭版本弹窗
+window.closeVersionModal = function (version) {
+    const modal = document.getElementById('versionUpdateModal');
+    if (modal) {
+        modal.classList.add('fade-out');
+        setTimeout(() => modal.remove(), 300);
+    }
+    localStorage.setItem(VERSION_STORAGE_KEY, version);
+};
 function loadVersion() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const response = yield fetch('/api/version');
+            const response = yield fetch('/api/system/version');
             const data = yield response.json();
-            const versionStr = data.version || 'unknown';
+            if (!data.success || !data.data)
+                return;
+            const versionStr = data.data.version || 'unknown';
+            const changelog = data.data.changelog || [];
             const versionEl = document.getElementById('version');
             if (!versionEl)
                 return;
@@ -26,6 +73,8 @@ function loadVersion() {
             else {
                 versionEl.innerText = `v${versionStr}`;
             }
+            // 显示版本更新通知弹窗
+            showVersionUpdateModal(versionStr, changelog);
         }
         catch (error) {
             console.error('Failed to load version:', error);
