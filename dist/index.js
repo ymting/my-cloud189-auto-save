@@ -1549,11 +1549,9 @@ AppDataSource.initialize().then(() => __awaiter(void 0, void 0, void 0, function
                 name: packageJson.name,
                 description: packageJson.description,
                 changelog: [
-                    '🚀 性能优化：移除阻塞加载的云盘 API 调用，页面秒开',
-                    '💾 TMDB 缓存：系统启动后自动补全缺失的 TMDB 信息',
-                    '📢 版本通知：版本更新时弹出通知，用户可关闭',
-                    '📊 数据库索引优化，查询速度提升',
-                    '✂️ API 分页改造，减少数据传输量'
+                    '🐛 修复 AI 重命名弹窗层级遮挡问题',
+                    '🐛 修复 AI 重命名文件选择丢失问题',
+                    '🔧 优化弹窗 z-index 层级管理'
                 ]
             }
         });
