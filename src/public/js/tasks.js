@@ -1139,7 +1139,8 @@ async function previewRename(autoUpdate = false) {
 function showRenamePreview(newNames, autoUpdate) {
     const modal = document.createElement('div');
     modal.className = 'modal preview-rename-modal';
-    modal.style.zIndex = '1010';
+    // 修复：提高 z-index 到 5200，确保在 AI 重命名弹窗（5100）之上
+    modal.style.zIndex = '5200';
     modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-header">
@@ -1226,15 +1227,25 @@ async function submitRename(autoUpdate) {
 }
 
 
+// AI重命名选中的文件缓存（解决弹窗层级导致DOM查询失败的问题）
+let aiRenameSelectedFiles = [];
+
 // 显示AI重命名选项
 async function showAIRenameOptions() {
-    const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked')).map(cb => cb.dataset.filename);
-    if (selectedFiles.length === 0) {
+    const selectedCheckboxes = Array.from(document.querySelectorAll('.file-checkbox:checked'));
+    if (selectedCheckboxes.length === 0) {
         message.warning('请选择要重命名的文件');
         return;
     }
 
-    const tmdbInfoHtml = chooseTask.tmdbId 
+    // 缓存选中的文件信息（包含 id 和 name），供 executeAIRename 使用
+    aiRenameSelectedFiles = selectedCheckboxes.map(cb => ({
+        id: cb.dataset.id,
+        name: cb.dataset.filename
+    }));
+    const selectedFileNames = aiRenameSelectedFiles.map(f => f.name);
+
+    const tmdbInfoHtml = chooseTask.tmdbId
         ? `<div style="margin-bottom: 15px; padding: 10px; background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 4px; color: #1890ff;">
              <span><i class="fas fa-info-circle"></i> 当前任务${chooseTask.manualTmdbBound ? '已被手动指定' : '已自动识别'}为 <b>TMDB ID: ${chooseTask.tmdbId} ${chooseTask.tmdbTitle ? '(' + chooseTask.tmdbTitle + ')' : ''}</b>${chooseTask.manualSeason != null ? ' &nbsp;<b>强制第 ' + chooseTask.manualSeason + ' 季</b>' : ''}</span>
            </div>`
@@ -1242,7 +1253,8 @@ async function showAIRenameOptions() {
 
     const modal = document.createElement('div');
     modal.className = 'modal rename-options-modal';
-    modal.style.zIndex = '1005';
+    // 修复：提高 z-index 到 5100，确保在文件列表弹窗（z-index: 5000）之上
+    modal.style.zIndex = '5100';
     modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-header">
@@ -1256,7 +1268,7 @@ async function showAIRenameOptions() {
                 <div class="rename-preview">
                     <h4>选中的文件：</h4>
                     <ul>
-                        ${selectedFiles.map(file => `<li>${file}</li>`).join('')}
+                        ${selectedFileNames.map(file => `<li>${file}</li>`).join('')}
                     </ul>
                 </div>
             </div>
@@ -1272,11 +1284,14 @@ async function showAIRenameOptions() {
 
 // 执行AI重命名
 async function executeAIRename() {
-    const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'));
-    const fileIds = selectedFiles.map(cb => ({
-        id: cb.dataset.id,
-        name: cb.dataset.filename
-    }));
+    // 使用缓存的文件信息，而不是重新查询 DOM（解决弹窗层级遮挡导致 DOM 查询失败的问题）
+    const fileIds = aiRenameSelectedFiles;
+
+    if (!fileIds || fileIds.length === 0) {
+        message.warning('未获取到需要修改的文件，请重新选择');
+        closeRenameOptionsModal();
+        return;
+    }
 
     try {
         loading.show();
@@ -1330,6 +1345,8 @@ function closeFileListModal() {
 function closeRenameOptionsModal() {
     const modal = document.querySelector('.rename-options-modal');
     modal?.remove();
+    // 清空 AI 重命名文件缓存
+    aiRenameSelectedFiles = [];
 }
 
 function closeRenameModal() {
@@ -1394,7 +1411,7 @@ function openManualTmdbModal() {
     }
     document.getElementById('tmdbSearchResultsManual').innerHTML = '';
     const modal = document.getElementById('manualTmdbModal');
-    modal.style.zIndex = '2000'; // 确保置顶于文件列表弹窗之上
+    modal.style.zIndex = '5100'; // 确保置顶于文件列表弹窗（5000）之上
     modal.style.display = 'block';
 }
 
