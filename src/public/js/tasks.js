@@ -1139,7 +1139,8 @@ async function previewRename(autoUpdate = false) {
 function showRenamePreview(newNames, autoUpdate) {
     const modal = document.createElement('div');
     modal.className = 'modal preview-rename-modal';
-    modal.style.zIndex = '1010';
+    // 修复：提高 z-index 到 5200，确保在 AI 重命名弹窗（5100）之上
+    modal.style.zIndex = '5200';
     modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-header">
@@ -1410,7 +1411,7 @@ function openManualTmdbModal() {
     }
     document.getElementById('tmdbSearchResultsManual').innerHTML = '';
     const modal = document.getElementById('manualTmdbModal');
-    modal.style.zIndex = '2000'; // 确保置顶于文件列表弹窗之上
+    modal.style.zIndex = '5100'; // 确保置顶于文件列表弹窗（5000）之上
     modal.style.display = 'block';
 }
 
