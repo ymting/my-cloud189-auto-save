@@ -2000,14 +2000,15 @@ AppDataSource.initialize().then(async () => {
     app.post('/api/files/ai-rename', async (req, res) => {
         try {
             const { taskId, files } = req.body;
-            if (files.length == 0) {
+            // 增加参数校验，防止 files 为 undefined/null 导致异常
+            if (!files || !Array.isArray(files) || files.length === 0) {
                 throw new Error('未获取到需要修改的文件');
             }
             const task = await taskService.getTaskById(taskId);
             if (!task) {
                 throw new Error('任务不存在');
             }
-            
+
             logTaskEvent(`[批量重命名] 开始对任务 [${task.resourceName}] 选中的 ${files.length} 个文件使用 AI 分析和重命名建议...`);
             // 开始ai分析
             const resourceInfo = await taskService._analyzeResourceInfo(
@@ -2020,6 +2021,8 @@ AppDataSource.initialize().then(async () => {
             logTaskEvent(`[批量重命名] AI 分析完成，生成了 ${renamePreviewResult.length} 条有效建议，等待用户确认`);
             return res.json({ success: true, data: renamePreviewResult });
         } catch (error) {
+            // 添加错误日志输出，便于排查问题
+            logTaskEvent(`[批量重命名] AI 分析失败: ${error.message}`);
             res.json({ success: false, error: error.message });
         }
     })

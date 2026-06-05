@@ -1929,7 +1929,8 @@ AppDataSource.initialize().then(() => __awaiter(void 0, void 0, void 0, function
     app.post('/api/files/ai-rename', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const { taskId, files } = req.body;
-            if (files.length == 0) {
+            // 增加参数校验，防止 files 为 undefined/null 导致异常
+            if (!files || !Array.isArray(files) || files.length === 0) {
                 throw new Error('未获取到需要修改的文件');
             }
             const task = yield taskService.getTaskById(taskId);
@@ -1944,6 +1945,8 @@ AppDataSource.initialize().then(() => __awaiter(void 0, void 0, void 0, function
             return res.json({ success: true, data: renamePreviewResult });
         }
         catch (error) {
+            // 添加错误日志输出，便于排查问题
+            logTaskEvent(`[批量重命名] AI 分析失败: ${error.message}`);
             res.json({ success: false, error: error.message });
         }
     }));
