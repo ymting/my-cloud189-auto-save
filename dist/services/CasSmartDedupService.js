@@ -76,7 +76,7 @@ class CasSmartDedupService {
                     return { successFiles, casResults, failedShareFileIds, casSuccessCount };
                 }
                 // 秒传缺失文件
-                const uploadResult = yield this._uploadMissingFiles(task, cloud189, savedCasFiles, enableCasFamilyTransfer, casFamilyFolderIdActual, familyCloud189, account);
+                const uploadResult = yield this._uploadMissingFiles(task, cloud189, savedCasFiles, enableCasFamilyTransfer, casFamilyFolderIdActual, familyCloud189, account, enableDeleteCasFile);
                 successFiles.push(...uploadResult.successFiles);
                 casResults.push(...uploadResult.casResults);
                 for (const id of uploadResult.failedShareFileIds) {
@@ -254,13 +254,13 @@ class CasSmartDedupService {
             logTaskEvent('[CAS智能去重] 已存在 ' + toDelete.length + ' 个，需秒传 ' + toUpload.length + ' 个');
             // 6. 删除已存在的 CAS 文件并缓存
             if (toDelete.length > 0) {
-                const deleteResult = yield this._deleteExistingCas(cloud189, task, toDelete);
+                const deleteResult = yield this._deleteExistingCas(cloud189, task, toDelete, enableDeleteCasFile);
                 casSuccessCount += deleteResult.deletedCount;
             }
             // 7. 秒传缺失的文件
             if (toUpload.length > 0) {
                 logTaskEvent('[CAS智能去重] 开始秒传 ' + toUpload.length + ' 个缺失文件...');
-                const uploadResult = yield this._uploadMissingFiles(task, cloud189, toUpload, enableCasFamilyTransfer, casFamilyFolderIdActual, familyCloud189, account);
+                const uploadResult = yield this._uploadMissingFiles(task, cloud189, toUpload, enableCasFamilyTransfer, casFamilyFolderIdActual, familyCloud189, account, enableDeleteCasFile);
                 successFiles.push(...uploadResult.successFiles);
                 casResults.push(...uploadResult.casResults);
                 for (const id of uploadResult.failedShareFileIds) {
@@ -401,15 +401,22 @@ class CasSmartDedupService {
         return { toDelete, toUpload };
     }
     // 删除已存在的 CAS
-    _deleteExistingCas(cloud189, task, casFiles) {
-        return __awaiter(this, void 0, void 0, function* () {
+    _deleteExistingCas(cloud189_1, task_1, casFiles_1) {
+        return __awaiter(this, arguments, void 0, function* (cloud189, task, casFiles, enableDeleteCasFile = true) {
             let deletedCount = 0;
-            logTaskEvent('[CAS智能去重] 删除 ' + casFiles.length + ' 个已存在的 CAS...');
+            logTaskEvent('[CAS智能去重] 处理 ' + casFiles.length + ' 个已存在的 CAS...');
             for (const casFile of casFiles) {
                 try {
-                    yield cloud189.deleteFile(casFile.id);
+                    // 修复 Issue #27：仅当用户启用"处理后删除 .cas 文件"时才执行删除
+                    // 即使不删除，也加入缓存避免下次重复处理
+                    if (enableDeleteCasFile) {
+                        yield cloud189.deleteFile(casFile.id);
+                        deletedCount++;
+                    }
+                    else {
+                        logTaskEvent('[CAS] 保留已存在 .cas 文件（未启用处理后删除）: ' + casFile.name);
+                    }
                     yield taskCacheManager.addCache(task.id, String(casFile.id));
-                    deletedCount++;
                 }
                 catch (e) {
                     logTaskEvent('[CAS删除] ' + casFile.name + ' 失败: ' + e.message);
@@ -420,8 +427,8 @@ class CasSmartDedupService {
         });
     }
     // 秒传缺失文件
-    _uploadMissingFiles(task, cloud189, casFiles, enableCasFamilyTransfer, casFamilyFolderIdActual, familyCloud189, account) {
-        return __awaiter(this, void 0, void 0, function* () {
+    _uploadMissingFiles(task_1, cloud189_1, casFiles_1, enableCasFamilyTransfer_1, casFamilyFolderIdActual_1, familyCloud189_1, account_1) {
+        return __awaiter(this, arguments, void 0, function* (task, cloud189, casFiles, enableCasFamilyTransfer, casFamilyFolderIdActual, familyCloud189, account, enableDeleteCasFile = true) {
             const successFiles = [];
             const casResults = [];
             const failedShareFileIds = new Set();
@@ -477,11 +484,17 @@ class CasSmartDedupService {
                                         yield familyCloud189Actual.deleteFamilyFile(casFamilyInfo.familyId, familyResult.familyFileId);
                                     }
                                     catch (e) { }
-                                    try {
-                                        yield cloud189.deleteFile(casFile.id);
-                                        yield taskCacheManager.addCache(task.id, String(casFile.id));
+                                    // 修复 Issue #27：仅当用户启用"处理后删除 .cas 文件"时才删除源 .cas
+                                    if (enableDeleteCasFile) {
+                                        try {
+                                            yield cloud189.deleteFile(casFile.id);
+                                            yield taskCacheManager.addCache(task.id, String(casFile.id));
+                                        }
+                                        catch (e) { }
                                     }
-                                    catch (e) { }
+                                    else {
+                                        logTaskEvent('[CAS] 保留源 .cas 文件（未启用处理后删除）: ' + casFile.name);
+                                    }
                                     casSuccessCount++;
                                 }
                                 else {
@@ -500,11 +513,17 @@ class CasSmartDedupService {
                                 logTaskEvent('[CAS秒传] 完成 ' + videoName);
                                 successFiles.push(videoName);
                                 casResults.push({ fileName: videoName, success: true });
-                                try {
-                                    yield cloud189.deleteFile(casFile.id);
-                                    yield taskCacheManager.addCache(task.id, String(casFile.id));
+                                // 修复 Issue #27：仅当用户启用"处理后删除 .cas 文件"时才删除源 .cas
+                                if (enableDeleteCasFile) {
+                                    try {
+                                        yield cloud189.deleteFile(casFile.id);
+                                        yield taskCacheManager.addCache(task.id, String(casFile.id));
+                                    }
+                                    catch (e) { }
                                 }
-                                catch (e) { }
+                                else {
+                                    logTaskEvent('[CAS] 保留源 .cas 文件（未启用处理后删除）: ' + casFile.name);
+                                }
                                 casSuccessCount++;
                             }
                             else {
