@@ -2077,23 +2077,30 @@ class TaskService {
                                             yield new Promise(resolve => setTimeout(resolve, FILE_DELAY));
                                         }
                                         // 4. 清理目标目录所有CAS文件（包括本批次和之前残留的）
-                                        try {
-                                            const currentFolderFiles = yield this.getAllFolderFiles(cloud189, task);
-                                            const allCasFilesInTarget = currentFolderFiles.filter(f => CasUtils.isCasFile(f.name));
-                                            if (allCasFilesInTarget.length > 0) {
-                                                logTaskEvent(`[CAS] 清理目标目录 ${allCasFilesInTarget.length} 个CAS文件...`);
-                                                for (const casFile of allCasFilesInTarget) {
-                                                    try {
-                                                        yield cloud189.deleteFile(casFile.id);
-                                                    }
-                                                    catch (e) {
-                                                        logTaskEvent(`[CAS] 删除CAS文件失败(${casFile.name}): ${e.message}`);
+                                        // 修复 Issue #27：仅当用户启用"处理后删除 .cas 文件"时才执行清理，
+                                        // 避免用户取消勾选后 .cas 仍被删除进回收站
+                                        if (enableDeleteCasFile) {
+                                            try {
+                                                const currentFolderFiles = yield this.getAllFolderFiles(cloud189, task);
+                                                const allCasFilesInTarget = currentFolderFiles.filter(f => CasUtils.isCasFile(f.name));
+                                                if (allCasFilesInTarget.length > 0) {
+                                                    logTaskEvent(`[CAS] 清理目标目录 ${allCasFilesInTarget.length} 个CAS文件...`);
+                                                    for (const casFile of allCasFilesInTarget) {
+                                                        try {
+                                                            yield cloud189.deleteFile(casFile.id);
+                                                        }
+                                                        catch (e) {
+                                                            logTaskEvent(`[CAS] 删除CAS文件失败(${casFile.name}): ${e.message}`);
+                                                        }
                                                     }
                                                 }
                                             }
+                                            catch (e) {
+                                                logTaskEvent(`[CAS] 清理CAS文件异常: ${e.message}`);
+                                            }
                                         }
-                                        catch (e) {
-                                            logTaskEvent(`[CAS] 清理CAS文件异常: ${e.message}`);
+                                        else {
+                                            logTaskEvent(`[CAS] 保留目标目录 .cas 文件（未启用处理后删除）`);
                                         }
                                         // 5. 每批次清理家庭中转目录 + 清空家庭回收站（恢复配额的关键！）
                                         if (enableCasFamilyTransfer && this._casFamilyInfo && casFamilyFolderIdActual) {
