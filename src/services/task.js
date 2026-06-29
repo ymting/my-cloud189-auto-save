@@ -13,6 +13,7 @@ const path = require('path');
 const { StrmService } = require('./strm');
 const { EventService } = require('./eventService');
 const { TaskEventHandler } = require('./taskEventHandler');
+const { appendTmdbIdToFolderName } = require('../utils/folderNameUtils');
 const AIService = require('./ai');
 const { TMDBService } = require('./tmdb');
 const harmonizedFilter = require('../utils/BloomFilter');
@@ -49,12 +50,18 @@ class TaskService {
 
     // 创建任务的基础配置
     _createTaskConfig(taskDto, shareInfo, realFolder, resourceName, currentEpisodes = 0, shareFolderId = null, shareFolderName = "") {
+        // ✅ Issue #28: 若开关开启且任务有 TMDB ID，在云盘文件夹名末尾追加 [tmdb-{id}] 标记
+        const tmdbIdForFolder = taskDto.tmdbId;
+        const appendEnabled = ConfigService.getConfigValue('task.appendTmdbIdToFolder');
+        const finalFolderName = (appendEnabled && tmdbIdForFolder)
+            ? appendTmdbIdToFolderName(realFolder.name, tmdbIdForFolder)
+            : realFolder.name;
         const config = {
             accountId: taskDto.accountId,
             shareLink: taskDto.shareLink,
             targetFolderId: taskDto.targetFolderId,
             realFolderId:realFolder.id,
-            realFolderName:realFolder.name,
+            realFolderName: finalFolderName,
             status: 'pending',
             totalEpisodes: taskDto.totalEpisodes,
             resourceName,
@@ -1456,9 +1463,11 @@ class TaskService {
                             if (movieDetail?.title) {
                                 task.videoType = 'movie';
                                 task.tmdbTitle = movieDetail.title;
+                                task.tmdbId = String(extractedTmdbId);
                             } else if (tvDetail?.title) {
                                 task.videoType = 'tv';
                                 task.tmdbTitle = tvDetail.title;
+                                task.tmdbId = String(extractedTmdbId);
 
                                 // 自动设置当前季总集数
                                 const seasonNum = (() => {
@@ -1471,6 +1480,14 @@ class TaskService {
                                     task.totalEpisodes = s.episode_count;
                                     logTaskEvent(`[任务执行] ${tvDetail.title} 第${seasonNum}季: 总集数 ${s.episode_count}`);
                                 }
+                            }
+
+                            // ✅ Issue #28: 若开关开启且任务识别到 TMDB ID，给云盘文件夹名追加 [tmdb-{id}] 标记
+                            const appendEnabled = ConfigService.getConfigValue('task.appendTmdbIdToFolder');
+                            if (appendEnabled && task.tmdbId && task.realFolderName && !/\s*\[tmdb-\d+\]\s*$/i.test(task.realFolderName)) {
+                                const oldName = task.realFolderName;
+                                task.realFolderName = appendTmdbIdToFolderName(task.realFolderName, task.tmdbId);
+                                logTaskEvent(`[任务执行] 已为文件夹追加 [tmdb-${task.tmdbId}] 标记: "${oldName}" → "${task.realFolderName}"`);
                             }
                         } catch (e) {
                             logTaskEvent(`[任务执行] TMDB ID ${extractedTmdbId} 类型检测失败: ${e.message}`);

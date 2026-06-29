@@ -799,12 +799,15 @@ function selectTmdbItem(id, type, title, year) {
 
 // 初始化任务表单
 function initTaskForm() {
-     
-    // 使用防抖包装处理函数
-    const debouncedHandleShare = debounce(parseShareLink, 500);
+
+    // ✅ 使用 input 事件 + 防抖，实现"边输入边自动解析"
+    //    修复：之前用 blur 监听时，用户复制粘贴完整链接（含访问码）后光标停留
+    //          在 shareLink 输入框不会失焦，导致自动识别失效。
+    //    触发时机：每次输入内容变化时，防抖 800ms 后才真正发请求
+    const debouncedHandleShare = debounce(parseShareLink, 800);
     const shareInputs = document.querySelectorAll('[data-share-input]');
     shareInputs.forEach(input => {
-        input.addEventListener('blur', debouncedHandleShare);
+        input.addEventListener('input', debouncedHandleShare);
     });
 
     document.getElementById('taskName').addEventListener('input', () => {
@@ -1840,7 +1843,15 @@ async function parseShareLink() {
     let shareLink = document.getElementById('shareLink')?.value?.trim();
     let accessCode = document.getElementById('accessCode')?.value?.trim();
     const accountId = document.getElementById('accountId')?.value;
-    if (!shareLink || !accountId) {
+    if (!shareLink) {
+        return;
+    }
+    // ✅ 账号为空时不再静默 return：清空已显示的目录，避免用户看到过时结果
+    if (!accountId) {
+        const shareFoldersGroup = document.querySelector('.share-folders-group');
+        const shareFoldersList = document.getElementById('shareFoldersList');
+        if (shareFoldersGroup) shareFoldersGroup.style.display = 'none';
+        if (shareFoldersList) shareFoldersList.innerHTML = '';
         return;
     }
     

@@ -9,6 +9,7 @@ const { CacheManager } = require('./services/CacheManager')
 const taskCacheManager = require('./services/TaskCacheManager');
 const ConfigService = require('./services/ConfigService');
 const ProxyUtil = require('./utils/ProxyUtil');
+const { appendTmdbIdToFolderName } = require('./utils/folderNameUtils');
 const { CloudAuthClient } = require('../vender/cloud189-sdk/dist');
 const packageJson = require('../package.json');
 const session = require('express-session');
@@ -629,6 +630,129 @@ AppDataSource.initialize().then(async () => {
         }
     });
 
+    /**
+     * Issue #28: 迁移历史任务文件夹名追加 [tmdb-{id}] 标记
+     * POST /api/tasks/migrate-folder-tmdbid
+     * Body: { dryRun: boolean }  // true=预览，false=执行
+     *
+     * 逻辑：
+     * 1. 查找所有有 tmdbId 且 realFolderName 不含 [tmdb-xxx] 标记的任务
+     * 2. dryRun=true: 返回预览（toMigrate + skipped）
+     * 3. dryRun=false: 调用天翼云盘 renameFolder API + 更新数据库
+     * 4. 失败的任务不影响其他任务，错误信息收集到 results
+     */
+    app.post('/api/tasks/migrate-folder-tmdbid', async (req, res) => {
+        try {
+            const dryRun = req.body.dryRun !== false; // 默认 true（安全）
+
+            // 查询候选任务：有 TMDB ID 且 realFolderName 存在且未含标记
+            const candidates = await taskRepo
+                .createQueryBuilder('task')
+                .leftJoinAndSelect('task.account', 'account')
+                .where('task.tmdbId IS NOT NULL')
+                .andWhere('task.realFolderName IS NOT NULL')
+                .andWhere(`task.realFolderName NOT LIKE :pattern`, { pattern: '%[tmdb-%' })
+                .getMany();
+
+            // 分类：toMigrate vs skipped
+            const toMigrate = [];
+            const skipped = [];
+            for (const task of candidates) {
+                if (!task.realFolderName || !task.tmdbId) {
+                    skipped.push({ taskId: task.id, reason: '无 TMDB ID 或文件夹名' });
+                    continue;
+                }
+                const newName = appendTmdbIdToFolderName(task.realFolderName, task.tmdbId);
+                if (newName === task.realFolderName) {
+                    skipped.push({ taskId: task.id, reason: '已含 [tmdb-xxx] 标记' });
+                    continue;
+                }
+                toMigrate.push({
+                    taskId: task.id,
+                    oldName: task.realFolderName,
+                    newName,
+                    tmdbId: task.tmdbId,
+                    accountId: task.accountId
+                });
+            }
+
+            // dryRun：只返回预览
+            if (dryRun) {
+                return res.json({
+                    success: true,
+                    data: {
+                        totalTasks: candidates.length,
+                        toMigrate,
+                        skipped
+                    }
+                });
+            }
+
+            // 真实执行
+            logTaskEvent(`[文件夹迁移] 开始迁移 ${toMigrate.length} 个任务`);
+            const results = [];
+            let migrated = 0;
+            let failed = 0;
+
+            for (const item of toMigrate) {
+                try {
+                    const task = await taskRepo.findOne({
+                        where: { id: item.taskId },
+                        relations: { account: true }
+                    });
+                    if (!task) {
+                        results.push({ taskId: item.taskId, status: 'failed', error: '任务不存在' });
+                        failed++;
+                        continue;
+                    }
+
+                    // 调用天翼云盘重命名文件夹
+                    const cloud189 = Cloud189Service.getInstance(task.account);
+                    const renameRequest = task.account.familyId
+                        ? { folderId: task.realFolderId, folderName: item.newName, familyId: task.account.familyId }
+                        : { folderId: task.realFolderId, folderName: item.newName };
+                    const renameResult = await cloud189.renameFolder(renameRequest);
+
+                    if (!renameResult || (renameResult.res_code && renameResult.res_code !== 'Success')) {
+                        const errMsg = renameResult?.res_message || '云盘重命名失败';
+                        logTaskEvent(`[文件夹迁移] 任务 ${item.taskId} 失败: ${errMsg}`);
+                        results.push({ taskId: item.taskId, status: 'failed', error: errMsg, oldName: item.oldName, newName: item.newName });
+                        failed++;
+                        continue;
+                    }
+
+                    // 更新数据库
+                    task.realFolderName = item.newName;
+                    await taskRepo.save(task);
+
+                    logTaskEvent(`[文件夹迁移] 任务 ${item.taskId} 成功: "${item.oldName}" → "${item.newName}"`);
+                    results.push({ taskId: item.taskId, status: 'ok', oldName: item.oldName, newName: item.newName });
+                    migrated++;
+
+                    // 限流：每秒 1 个请求，避免触发云盘 API 限流
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                } catch (e) {
+                    logTaskEvent(`[文件夹迁移] 任务 ${item.taskId} 异常: ${e.message}`);
+                    results.push({ taskId: item.taskId, status: 'failed', error: e.message, oldName: item.oldName, newName: item.newName });
+                    failed++;
+                }
+            }
+
+            logTaskEvent(`[文件夹迁移] 完成：成功 ${migrated} 个，失败 ${failed} 个`);
+            res.json({
+                success: true,
+                data: {
+                    migrated,
+                    failed,
+                    results
+                }
+            });
+        } catch (error) {
+            logTaskEvent(`[文件夹迁移] 接口异常: ${error.message}`);
+            res.status(500).json({ success: false, error: error.message });
+        }
+    });
+
     // 更新单个任务的 tmdbContent（前端回写用）
     app.patch('/api/tasks/:id/tmdb-content', async (req, res) => {
         try {
@@ -925,6 +1049,13 @@ AppDataSource.initialize().then(async () => {
 
                         if (task.tmdbContent) {
                             sibling.tmdbContent = task.tmdbContent;
+                        }
+
+                        // ✅ Issue #28: 若开关开启，给兄弟任务文件夹名追加 [tmdb-{id}] 标记
+                        const appendEnabled = ConfigService.getConfigValue('task.appendTmdbIdToFolder');
+                        if (appendEnabled && sibling.realFolderName && !/\s*\[tmdb-\d+\]\s*$/i.test(sibling.realFolderName)) {
+                            sibling.realFolderName = appendTmdbIdToFolderName(sibling.realFolderName, tmdbId);
+                            logTaskEvent(`[TMDB级联] 已为兄弟任务文件夹追加 [tmdb-${tmdbId}] 标记: ${sibling.realFolderName}`);
                         }
 
                         await taskRepo.save(sibling);

@@ -183,6 +183,9 @@ class TelegramBotService {
             }
             // 忽略命令消息
             if (msg.text?.startsWith('/')) return;
+            // ✅ 分享链接由 onText(/cloud\.189\.cn/) 专用处理器统一处理
+            //    此处直接短路返回，避免与下方 onText 双触发导致 handleFolderSelection 重复执行（出现两次"请选择保存目录"）
+            if (/cloud\.189\.cn/.test(msg.text || '')) return;
             // TMDB绑定模式下处理搜索
             if (this.tmdbBindMode) {
                 await this._handleTmdbSearchInput(chatId, msg.text?.trim());
@@ -1398,6 +1401,13 @@ class TelegramBotService {
         try {
             // 发送"正在输入"状态
             await this.bot.sendChatAction(chatId, 'typing');
+
+            // ✅ 分享链接不在 AI 助手中处理，统一交由 onText(/cloud\.189\.cn/) 处理器
+            //    防止被 on('message') + onText 双触发导致 handleFolderSelection 重复执行
+            if (/cloud\.189\.cn/.test(message || '')) {
+                logTaskEvent(`[AI助手] 跳过分享链接处理，交由专用 onText 处理器`);
+                return;
+            }
 
             // 检测分享链接 - 使用 cloud189Utils.parseCloudShare 正确提取链接和访问码
             const shareLinkMatch = message.match(/https?:\/\/cloud\.189\.cn\/t\/[\w]+/gi);
