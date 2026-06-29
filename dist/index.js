@@ -19,6 +19,7 @@ const { CacheManager } = require('./services/CacheManager');
 const taskCacheManager = require('./services/TaskCacheManager');
 const ConfigService = require('./services/ConfigService');
 const ProxyUtil = require('./utils/ProxyUtil');
+const { appendTmdbIdToFolderName } = require('./utils/folderNameUtils');
 const { CloudAuthClient } = require('../vender/cloud189-sdk/dist');
 const packageJson = require('../package.json');
 const session = require('express-session');
@@ -899,6 +900,12 @@ AppDataSource.initialize().then(() => __awaiter(void 0, void 0, void 0, function
                         }
                         if (task.tmdbContent) {
                             sibling.tmdbContent = task.tmdbContent;
+                        }
+                        // ✅ Issue #28: 若开关开启，给兄弟任务文件夹名追加 [tmdb-{id}] 标记
+                        const appendEnabled = ConfigService.getConfigValue('task.appendTmdbIdToFolder');
+                        if (appendEnabled && sibling.realFolderName && !/\s*\[tmdb-\d+\]\s*$/i.test(sibling.realFolderName)) {
+                            sibling.realFolderName = appendTmdbIdToFolderName(sibling.realFolderName, tmdbId);
+                            logTaskEvent(`[TMDB级联] 已为兄弟任务文件夹追加 [tmdb-${tmdbId}] 标记: ${sibling.realFolderName}`);
                         }
                         yield taskRepo.save(sibling);
                         logTaskEvent(`[TMDB级联] 已同步TMDB绑定到兄弟任务: ${sibling.resourceName} (第${siblingSeason || '?'}季)`);
