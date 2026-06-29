@@ -706,6 +706,29 @@ function saveToCache(key, value) {
 document.addEventListener('DOMContentLoaded', function() {
     const tooltip = document.getElementById('regexTooltip');
 
+    // ✅ 不同 help-icon 的自定义说明内容
+    const helpContents = {
+        'appendTmdbIdToFolder': `
+            <div style="text-align: left; line-height: 1.6;">
+                <h4 style="margin: 0 0 8px 0;">ℹ️ 任务文件夹追加 [tmdb-xxx] 标记</h4>
+                <p>为已绑定 TMDB 的任务，在其云盘文件夹名末尾追加 <code>[tmdb-{id}]</code> 标记。</p>
+                <p><strong>示例：</strong></p>
+                <ul>
+                    <li>关闭时：<code>狂飙 (2023)</code></li>
+                    <li>开启时：<code>狂飙 (2023)[tmdb-131887]</code></li>
+                </ul>
+                <p><strong>用途：</strong>方便 Emby / Jellyfin / Plex 等媒体管理工具通过 TMDB ID 直接精准匹配影视条目，避免标题翻译/别名/年份不同导致的刮削歧义或失败。</p>
+                <p><strong>注意：</strong></p>
+                <ul>
+                    <li>默认关闭（不影响现有 Emby 库）</li>
+                    <li>开启后只对新任务生效</li>
+                    <li>历史任务需点击"迁移历史任务"按钮手动迁移</li>
+                    <li>已含 <code>[tmdb-xxx]</code> 标记的任务不会重复追加</li>
+                </ul>
+            </div>
+        `
+    };
+
     // 使用事件委托，监听整个文档的点击事件
     document.addEventListener('click', function(e) {
         // 检查点击的是否是帮助图标
@@ -714,22 +737,28 @@ document.addEventListener('DOMContentLoaded', function() {
             const helpIcon = e.target;
             const rect = helpIcon.getBoundingClientRect();
             const isVisible = tooltip.style.display === 'block';
-            
+
             // 关闭弹窗
             if (isVisible && tooltip._currentIcon === helpIcon) {
                 tooltip.style.display = 'none';
                 return;
             }
 
+            // ✅ 根据 data-tooltip 决定显示内容
+            const key = helpIcon.getAttribute('data-tooltip');
+            if (key && helpContents[key]) {
+                tooltip.innerHTML = helpContents[key];
+            }
+
             // 显示弹窗
             tooltip.style.display = 'block';
             tooltip._currentIcon = helpIcon;
             tooltip.style.zIndex = 9999;
-            
+
             // 计算位置
             const viewportWidth = window.innerWidth;
             const tooltipWidth = tooltip.offsetWidth;
-            
+
             // 移动端适配
             if (viewportWidth <= 768) {
                 tooltip.style.left = '50%';

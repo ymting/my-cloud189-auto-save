@@ -656,6 +656,25 @@
                                 </div>
                             </div>
                             <div class="settings-item">
+                                <div class="settings-item-label">
+                                    任务文件夹追加 [tmdb-xxx] 标记
+                                    <span class="help-icon" data-tooltip="appendTmdbIdToFolder" title="点击查看详细说明">❓</span>
+                                </div>
+                                <div class="settings-item-content">
+                                    <label><input type="checkbox" id="appendTmdbIdToFolder"> 开启后为已绑定 TMDB 的任务在云盘文件夹名末尾追加 [tmdb-{id}] 标记</label>
+                                    <small class="form-text">
+                                        示例：<code>狂飙 (2023)</code> → <code>狂飙 (2023)[tmdb-131887]</code><br>
+                                        方便 Emby / Jellyfin / Plex 等媒体管理工具通过 TMDB ID 直接精准匹配，<br>
+                                        避免因标题翻译/别名/年份不同导致的刮削歧义。<br>
+                                        <strong>默认关闭</strong>，开启后只对新任务生效；历史任务需点击下方按钮手动迁移。
+                                    </small>
+                                    <div style="margin-top: 8px;">
+                                        <button type="button" id="migrateFolderTmdbBtn" class="btn-secondary" onclick="migrateFolderTmdb()">迁移历史任务 →</button>
+                                        <small class="form-text" id="migrateFolderTmdbHint" style="margin-left: 8px;">开关关闭时此按钮不可用</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="settings-item">
                                 <div class="settings-item-label">天翼云盘特色功能</div>
                                 <div class="settings-item-content">
                                     <div class="settings-checkbox-group" style="margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 16px;">

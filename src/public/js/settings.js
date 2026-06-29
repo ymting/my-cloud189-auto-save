@@ -1,4 +1,17 @@
 let customPushConfigs = []
+
+/**
+ * HTML 实体转义，防止 XSS
+ */
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 async function loadSettings() {
     try {
         const response = await fetch('/api/settings');
@@ -18,6 +31,13 @@ async function loadSettings() {
             document.getElementById('mediaSuffix').value = settings.task?.mediaSuffix || '.mkv;.iso;.ts;.mp4;.avi;.rmvb;.wmv;.m2ts;.mpg;.flv;.rm;.mov';
             document.getElementById('enableOnlySaveMedia').checked = settings.task?.enableOnlySaveMedia || false;
             document.getElementById('enableAutoCreateFolder').checked = settings.task?.enableAutoCreateFolder || false;
+            // ✅ Issue #28: 任务文件夹追加 [tmdb-xxx] 标记
+            const appendTmdbId = settings.task?.appendTmdbIdToFolder || false;
+            document.getElementById('appendTmdbIdToFolder').checked = appendTmdbId;
+            updateMigrateButtonState(appendTmdbId);
+            document.getElementById('appendTmdbIdToFolder').addEventListener('change', (e) => {
+                updateMigrateButtonState(e.target.checked);
+            });
             document.getElementById('enableCasRapidUpload').checked = settings.task?.enableCasRapidUpload ?? true;
             document.getElementById('enableDeleteCasFile').checked = settings.task?.enableDeleteCasFile ?? true;
             document.getElementById('enableCasFamilyTransfer').checked = settings.task?.enableCasFamilyTransfer ?? true;
@@ -154,6 +174,8 @@ async function saveSettings() {
             mediaSuffix: document.getElementById('mediaSuffix').value,
             enableOnlySaveMedia: document.getElementById('enableOnlySaveMedia').checked,
             enableAutoCreateFolder: document.getElementById('enableAutoCreateFolder').checked,
+            // ✅ Issue #28: 任务文件夹追加 [tmdb-xxx] 标记
+            appendTmdbIdToFolder: document.getElementById('appendTmdbIdToFolder').checked,
             enableCasRapidUpload: document.getElementById('enableCasRapidUpload').checked,
             enableDeleteCasFile: document.getElementById('enableDeleteCasFile').checked,
             enableCasFamilyTransfer: document.getElementById('enableCasFamilyTransfer').checked,
@@ -299,6 +321,211 @@ function generateApiKey() {
         apiKey += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     document.getElementById('systemApiKey').value = apiKey;
+}
+
+// ✅ Issue #28: 任务文件夹追加 [tmdb-xxx] 标记相关
+
+/**
+ * 根据开关状态启用/禁用迁移按钮
+ */
+function updateMigrateButtonState(enabled) {
+    const btn = document.getElementById('migrateFolderTmdbBtn');
+    const hint = document.getElementById('migrateFolderTmdbHint');
+    if (!btn) return;
+    btn.disabled = !enabled;
+    if (hint) {
+        hint.textContent = enabled
+            ? '点击按钮预览并迁移历史任务'
+            : '请先开启上方开关';
+    }
+}
+
+/**
+ * 迁移历史任务文件夹名为其追加 [tmdb-{id}] 标记
+ * 4 阶段：预览 -> 二次确认 -> 执行 -> 结果
+ */
+async function migrateFolderTmdb() {
+    // 阶段 ① 预览
+    let preview;
+    try {
+        loading.show();
+        const resp = await fetch('/api/tasks/migrate-folder-tmdbid', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dryRun: true })
+        });
+        loading.hide();
+        const data = await resp.json();
+        if (!data.success) {
+            message.warning('预览失败: ' + data.error);
+            return;
+        }
+        preview = data.data;
+    } catch (e) {
+        loading.hide();
+        message.warning('预览失败: ' + e.message);
+        return;
+    }
+
+    // 构造预览 HTML
+    const toMigrateList = preview.toMigrate.map(item =>
+        `<li><code>${escapeHtml(item.oldName)}</code> → <code>${escapeHtml(item.newName)}</code></li>`
+    ).join('');
+    const skippedList = preview.skipped.map(item =>
+        `<li>任务 #${item.taskId}: ${escapeHtml(item.reason)}</li>`
+    ).join('');
+
+    const previewHtml = `
+        <div style="text-align: left;">
+            <p>将迁移 <strong style="color: var(--accent);">${preview.toMigrate.length}</strong> 个任务，跳过 <strong>${preview.skipped.length}</strong> 个</p>
+            ${preview.toMigrate.length > 0 ? `
+                <details open>
+                    <summary>✅ 将迁移（${preview.toMigrate.length}）</summary>
+                    <ul style="margin: 8px 0; padding-left: 20px; max-height: 240px; overflow-y: auto;">${toMigrateList}</ul>
+                </details>
+            ` : ''}
+            ${preview.skipped.length > 0 ? `
+                <details>
+                    <summary>⏭️ 将跳过（${preview.skipped.length}）</summary>
+                    <ul style="margin: 8px 0; padding-left: 20px; max-height: 120px; overflow-y: auto;">${skippedList}</ul>
+                </details>
+            ` : ''}
+            ${preview.toMigrate.length === 0 ? '<p style="color: #888;">没有需要迁移的任务。</p>' : ''}
+        </div>
+    `;
+
+    // 阶段 ② 二次确认（需用户输入"确认迁移"）
+    const confirmed = await showMigrateConfirmDialog(previewHtml);
+    if (!confirmed) return;
+
+    // 阶段 ③ 执行
+    const progressModal = showMigrateProgressModal();
+    try {
+        loading.show();
+        const resp = await fetch('/api/tasks/migrate-folder-tmdbid', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dryRun: false })
+        });
+        loading.hide();
+        const data = await resp.json();
+        progressModal.close();
+        if (!data.success) {
+            message.warning('迁移失败: ' + data.error);
+            return;
+        }
+
+        // 阶段 ④ 结果
+        const results = data.data;
+        const failedList = results.results.filter(r => r.status === 'failed');
+        showMigrateResultModal(results, failedList);
+    } catch (e) {
+        loading.hide();
+        progressModal.close();
+        message.warning('迁移失败: ' + e.message);
+    }
+}
+
+/**
+ * 阶段 ②：二次确认弹窗（要求用户输入"确认迁移"）
+ */
+function showMigrateConfirmDialog(previewHtml) {
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h3>⚠️ 二次确认</h3>
+                </div>
+                <div class="modal-body">
+                    ${previewHtml}
+                    <div style="margin-top: 16px; padding: 12px; background: var(--hover-bg, #fff3cd); border-radius: 6px;">
+                        <p style="margin: 0 0 8px 0; color: #856404;">⚠️ 此操作将修改云盘上的文件夹名，请确认无问题后继续</p>
+                        <label>请输入 <strong>确认迁移</strong> 以继续：</label>
+                        <input type="text" id="migrateConfirmInput" placeholder="确认迁移" style="width: 100%; margin-top: 4px; padding: 6px 10px; box-sizing: border-box;">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-default" id="migrateCancelBtn">取消</button>
+                    <button type="button" class="btn-primary" id="migrateConfirmBtn" disabled>确认执行</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        const input = document.getElementById('migrateConfirmInput');
+        const confirmBtn = document.getElementById('migrateConfirmBtn');
+        const cancelBtn = document.getElementById('migrateCancelBtn');
+
+        input.addEventListener('input', () => {
+            confirmBtn.disabled = input.value.trim() !== '确认迁移';
+        });
+        confirmBtn.addEventListener('click', () => {
+            modal.remove();
+            resolve(true);
+        });
+        cancelBtn.addEventListener('click', () => {
+            modal.remove();
+            resolve(false);
+        });
+        setTimeout(() => input.focus(), 100);
+    });
+}
+
+/**
+ * 阶段 ③：执行中进度弹窗
+ */
+function showMigrateProgressModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-body">
+                <div class="spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 16px auto;"></div>
+                <p style="margin: 16px 0;">正在迁移，请稍候...</p>
+                <p style="color: #888; font-size: 12px;">为避免触发云盘 API 限流，每个任务间隔 1 秒</p>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    return {
+        close: () => modal.remove()
+    };
+}
+
+/**
+ * 阶段 ④：结果汇总弹窗
+ */
+function showMigrateResultModal(results, failedList) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    const failedHtml = failedList.length > 0
+        ? `<details open>
+                <summary>❌ 失败（${failedList.length}）</summary>
+                <ul style="margin: 8px 0; padding-left: 20px; max-height: 200px; overflow-y: auto;">
+                    ${failedList.map(f => `<li>任务 #${f.taskId}: ${escapeHtml(f.error || '未知错误')}</li>`).join('')}
+                </ul>
+           </details>`
+        : '';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>${results.failed === 0 ? '✅ 迁移完成' : '⚠️ 迁移完成（有失败）'}</h3>
+            </div>
+            <div class="modal-body">
+                <p>成功 <strong style="color: #10b981;">${results.migrated}</strong> 个，失败 <strong style="color: #ef4444;">${results.failed}</strong> 个</p>
+                ${failedHtml}
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn-primary" id="migrateResultCloseBtn">确定</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    document.getElementById('migrateResultCloseBtn').addEventListener('click', () => modal.remove());
 }
 
 // 移除旧的 CAS 家庭目录选择器逻辑，改为账号级配置
