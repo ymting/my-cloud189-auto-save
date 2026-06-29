@@ -8,7 +8,13 @@
 
 ## 近期开发记录
 
+- 2026-06-15：**发布 v3.0.4 Release 并修复 Issue #27** - 取消勾选"处理后删除 .cas 文件"后 .cas 仍被删除进回收站。原因：CAS 处理流程 4 处无条件调用 `cloud189.deleteFile(casFile.id)` 未检查 `task.enableDeleteCasFile`。修复位置：`task.js` 批次清理、`CasSmartDedupService.js` 的 `_deleteExistingCas` 与 `_uploadMissingFiles`（家庭中转+个人秒传成功分支）。取消勾选时不删除但仍加入缓存避免重复处理。dev → main 合并后创建 GitHub Release v3.0.4，已通知 Issue #27 提出者 ywmm3951 升级。提交 5dd16a9 已发布到 main。dev 分支版本号本地升级到 3.0.5（未提交）。
+- 2026-06-15：**初始化 AGENTS.md** - 将 Codex 协作规范补齐为长期项目规则文件，覆盖 Vibe Coding 角色定位、启动上下文流程、项目架构、关键数据流、代码一致性审查、中文注释、docs/memory 管理、md 转 html 规则以及 GitHub 推送注意事项；并通过 `/huashu-md-html` 流程生成 `docs/AGENTS.html` 阅读版。
+- 2026-06-09：**初始化 AGENTS.md** - 将 Codex 协作规范补齐为长期项目规则文件，覆盖 Vibe Coding 角色定位、启动上下文流程、项目架构、关键数据流、代码一致性审查、中文注释、docs/memory 管理、md 转 html 规则以及 GitHub 推送注意事项；并通过 `/huashu-md-html` 流程生成 `docs/AGENTS.html` 阅读版。
+- 2026-06-04：**发布 v3.0.2 Release** - 将 dev 分支合并到 main，创建 GitHub Release v3.0.2。主要更新：性能优化（解决 600+ 任务加载慢问题）、TMDB 后台补全服务、版本更新通知弹窗、影院模式弹窗透明问题修复。
 - 2026-06-03：**修复天翼云盘每日签到 400 错误** - 签到接口缺少必要参数导致失败。添加 SSO 登录步骤获取 COOKIE_LOGIN_USER cookie、activityId 参数 (ACT_SIGNIN)、正确的请求头 (X-Requested-With, Referer)。参考 [cloud189app-action-simplify](https://github.com/monSteRhhe/cloud189app-action-simplify) 项目实现。
+- 2026-06-04：**修复 GitHub Issue #26 性能问题** - 600+ 任务时数据库查询慢(1.5s)、前端卡顿。整改：添加 3 个数据库索引(`IDX_TASK_ACCOUNT_ID`, `IDX_TASK_STATUS`, `IDX_TASK_ENABLE_SYSTEM_PROXY`)，API 增加分页(page/pageSize, 默认每页100条)，移除冗余 N+1 查询，限制后处理批量(MAX_INIT_BATCH=20)，前端分页控件 + TMDB 富化并发控制(最大5并发)。
+- 2026-06-04：**修复影院模式更新日志弹窗透明问题及还原通知框暗色毛玻璃样式** - 修复了由于影院模式下 `--bg-main` 为透明导致更新日志弹窗（`#changelogModal`）无背景的问题，并还原了右上角系统状态下拉框（`.notification-dropdown`）的深色毛玻璃微光霓虹样式。另外，将 `.message-info` 的背景改为了不透明淡蓝色。
 - 2026-06-02：**HDHive 影巢功能集成开发评估** - 经审查，影巢资源搜索、积分类解锁、防抖防重复扣分、网盘筛选、以及一键转存任务创建闭环逻辑已 100% 全量开发完成，前后端代码、样式表和配置项全部就绪。
 - 2026-06-02：**Git 分支同步操作** - 将 concept 分支全量强制推送到 dev 分支（覆盖模式），dev 分支从 27aa528 更新至 913f932。
 - 2026-06-02：完成 **HDHive（影巢）OpenAPI 集成设计方案**。分析了在系统中集成 HDHive 资源搜索功能的技术可行性。报告文档：`docs/hdhive-openapi-integration-design.md`。
