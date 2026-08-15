@@ -1,3 +1,5 @@
+
+
 <div align="center">
     <img src="img/cloud189.png" alt="Logo" width="200">
     <h1>cloud189-auto-save</h1>
@@ -6,7 +8,7 @@
         <a href="https://github.com/ymting/my-cloud189-auto-save/packages">
             <img src="https://img.shields.io/badge/GHCR-Docker-blue?style=flat-square&logo=docker" alt="GHCR Docker">
         </a>
-        <img src="https://img.shields.io/badge/version-3.0.1-green?style=flat-square" alt="Version 3.0.1">
+        <img src="https://img.shields.io/badge/version-3.0.5-green?style=flat-square" alt="Version 3.0.5">
         <img src="https://img.shields.io/badge/runtime-Node.js%2016+-339933?style=flat-square&logo=node.js" alt="Node.js 16+">
     </p>
 </div>
@@ -164,6 +166,9 @@ src/
 ---
 
 ## 🪵 变更历史
+
+### v3.0.5 (2026-06-05)
+* **版本同步**：更新项目版本至 `3.0.5`，同步 `package.json` 版本号`依赖与配置。
 
 ### v3.0.1 (2026-06-04)
 * **Docker ARM64 支持**：镜像支持 amd64 和 arm64 架构。
